@@ -1,0 +1,129 @@
+// Online C compiler to run C program online
+#include <stdio.h>
+
+float findmin (float niz[], int clanovi);
+float findmax (float niz[], int clanovi);
+
+int main() {
+
+printf("CRTANJE GRAFIKA FUNKCIJE Y = AX^2+BX+C\n");
+float a;
+printf("Unesi a: ");
+scanf("%f", &a);
+float b;
+printf("\nUnesi b: ");
+scanf("%f", &b);
+float c;
+printf("\nUnesi c: ");
+scanf("%f", &c);
+
+int graph[41][41];
+for (int i = 0; i < 41; i++)
+{
+    for (int j = 0; j < 41; j++)
+    {
+        graph[i][j] = 0;
+    }
+}
+
+typedef struct funkcija {
+    float x;
+    float y;
+} kvadratna;
+
+kvadratna grafik[41];
+
+int brojac = 0;
+float i = -2;
+while (brojac < 41)
+{
+     grafik[brojac].x = i;
+     grafik[brojac].y = a * i * i + b * i + c;
+     brojac++;
+     i = i + 0.1;
+}
+
+float ipsiloni[41];
+for (int i = 0; i < 41; i++)
+{
+    ipsiloni[i]=grafik[i].y;
+}
+
+float minimum = findmin(ipsiloni, 41);
+float maksimum = findmax(ipsiloni, 41);
+
+float razlika = maksimum - minimum;
+float korak = razlika / 40;
+
+
+int brojac_i = 0;
+int brojac_jot = 0;
+float ipsilon_grafa = maksimum;
+while (brojac_i < 41)
+{
+    brojac_jot = 0;
+    while (brojac_jot < 41)
+    {
+        if (grafik[brojac_jot].y > ipsilon_grafa - (korak / 2) && grafik[brojac_jot].y < ipsilon_grafa + (korak / 2))
+        {
+            graph[brojac_i][brojac_jot] = 1;
+        }
+        brojac_jot++;
+    }
+    
+    ipsilon_grafa = ipsilon_grafa - korak;
+    brojac_i++;
+}
+
+printf("*       -2                                        2\n");
+printf("%f\n", maksimum + korak);
+for (int i = 0; i < 41; i++)
+{
+    printf ("*        ");
+    for (int j = 0; j < 41; j++)
+    {
+        if (graph[i][j] == 0)
+        {
+            printf(" ");
+        }
+        else
+        {
+            printf("#");
+        }
+    }
+    printf("\n");
+}
+printf("%f\n", minimum - korak);
+printf("*       -2                                        2\n");
+
+
+
+    return 0;
+}
+
+float findmin (float niz[], int clanovi)
+{
+    float min = niz[0];
+    for (int i = 0; i < clanovi; i++)
+    {
+        if(niz[i] < min)
+        {
+            min = niz[i];
+        }
+    }
+    return min;
+}
+
+float findmax (float niz[], int clanovi)
+{
+    float max = niz[0];
+    for (int i = 0; i < clanovi; i++)
+    {
+        if(niz[i] > max)
+        {
+            max = niz[i];
+        }
+    }
+    return max;
+}
+
