@@ -44,6 +44,10 @@ body {
   font-weight: bold;
 }
 
+.social-media img {
+  height: 26px;
+}
+
 .main-menu {
   background-color: rgb(255, 188, 0);
   grid-column: 1 / span 2;
