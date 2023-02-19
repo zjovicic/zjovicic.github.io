@@ -6,6 +6,7 @@ int isvocal (char a);
 
     // UTROVACKI TRASFORMER
 int main() {
+    printf("Utrovacki transforer. Example: patike > utikezapanje.\n");
     printf("Enter word up to 27 letters:\n");
     char *word = malloc(30);
     if (word == NULL)
