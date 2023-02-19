@@ -1,20 +1,19 @@
-// Online C compiler to run C program online
 #include <stdio.h>
 
-float findmin (float niz[], int clanovi);
-float findmax (float niz[], int clanovi);
+float findmin (float array[], int members);
+float findmax (float array[], int members);
 
 int main() {
 
-printf("CRTANJE GRAFIKA FUNKCIJE Y = AX^2+BX+C\n");
+printf("DRAWING THE GRAPH OF FUNCTION Y = AX^2+BX+C\n");
 float a;
-printf("Unesi a: ");
+printf("Enter a: ");
 scanf("%f", &a);
 float b;
-printf("\nUnesi b: ");
+printf("\nEnter b: ");
 scanf("%f", &b);
 float c;
-printf("\nUnesi c: ");
+printf("\nEnter c: ");
 scanf("%f", &c);
 
 int graph[41][41];
@@ -26,57 +25,58 @@ for (int i = 0; i < 41; i++)
     }
 }
 
-typedef struct funkcija {
+typedef struct function {
     float x;
     float y;
-} kvadratna;
+} quadratic;
 
-kvadratna grafik[41];
+quadratic qgraph[41];
 
-int brojac = 0;
+int counter = 0;
 float i = -2;
-while (brojac < 41)
+while (counter < 41)
 {
-     grafik[brojac].x = i;
-     grafik[brojac].y = a * i * i + b * i + c;
-     brojac++;
+     qgraph[counter].x = i;
+     qgraph[counter].y = a * i * i + b * i + c;
+     counter++;
      i = i + 0.1;
 }
 
-float ipsiloni[41];
+float ys[41];
 for (int i = 0; i < 41; i++)
 {
-    ipsiloni[i]=grafik[i].y;
+    ys[i]=qgraph[i].y;
 }
 
-float minimum = findmin(ipsiloni, 41);
-float maksimum = findmax(ipsiloni, 41);
+float minimum = findmin(ys, 41);
+float maximum = findmax(ys, 41);
 
-float razlika = maksimum - minimum;
-float korak = razlika / 40;
+float difference = maximum - minimum;
+float step = difference / 40;
 
 
-int brojac_i = 0;
-int brojac_jot = 0;
-float ipsilon_grafa = maksimum;
-while (brojac_i < 41)
+int counter_i = 0;
+int counter_jot = 0;
+float y_ofthegraph = maximum;
+while (counter_i < 41)
 {
-    brojac_jot = 0;
-    while (brojac_jot < 41)
+    counter_jot = 0;
+    while (counter_jot < 41)
     {
-        if (grafik[brojac_jot].y > ipsilon_grafa - (korak / 2) && grafik[brojac_jot].y < ipsilon_grafa + (korak / 2))
+        if (qgraph[counter_jot].y > y_ofthegraph - (step / 2) && qgraph[counter_jot].y < y_ofthegraph + (step / 2))
         {
-            graph[brojac_i][brojac_jot] = 1;
+            graph[counter_i][counter_jot] = 1;
         }
-        brojac_jot++;
+        counter_jot++;
     }
     
-    ipsilon_grafa = ipsilon_grafa - korak;
-    brojac_i++;
+    y_ofthegraph = y_ofthegraph - step;
+    counter_i++;
 }
 
+printf("Max Y in the range X = -2 to X = 2: %f\n\n", maximum);
 printf("*       -2                                        2\n");
-printf("%f\n", maksimum + korak);
+
 for (int i = 0; i < 41; i++)
 {
     printf ("*        ");
@@ -93,35 +93,38 @@ for (int i = 0; i < 41; i++)
     }
     printf("\n");
 }
-printf("%f\n", minimum - korak);
+
+
 printf("*       -2                                        2\n");
+printf("Min Y in the range X = -2 to X = 2: %f\n", minimum);
+
 
 
 
     return 0;
 }
 
-float findmin (float niz[], int clanovi)
+float findmin (float array[], int members)
 {
-    float min = niz[0];
-    for (int i = 0; i < clanovi; i++)
+    float min = array[0];
+    for (int i = 0; i < members; i++)
     {
-        if(niz[i] < min)
+        if(array[i] < min)
         {
-            min = niz[i];
+            min = array[i];
         }
     }
     return min;
 }
 
-float findmax (float niz[], int clanovi)
+float findmax (float array[], int members)
 {
-    float max = niz[0];
-    for (int i = 0; i < clanovi; i++)
+    float max = array[0];
+    for (int i = 0; i < members; i++)
     {
-        if(niz[i] > max)
+        if(array[i] > max)
         {
-            max = niz[i];
+            max = array[i];
         }
     }
     return max;
