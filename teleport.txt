@@ -742,7 +742,7 @@ void times(char *cityname, int howmany)
            printf("Nice to see you again! ");
            if(howmany % 10 == 1 && howmany % 11 != 0)
            {
-               printf("This is your %ith visit to %s!\n", howmany, cityname);
+               printf("This is your %ist visit to %s!\n", howmany, cityname);
            }
            else if(howmany % 10 == 2)
            {
