@@ -139,12 +139,15 @@ else if(strcmp(choice, "2") == 0)
     {
         printf("Wrong input!");
     }
-    } while(strcmp(choice, "1") != 0 && strcmp(choice, "2") != 0 && strcmp(choice, "3") != 0 && strcmp(choice, "4") != 0 && strcmp(choice, "5") != 0 && strcmp(choice, "6") != 0 && strcmp(choice, "7") != 0 && strcmp(choice, "8") != 0 && strcmp(choice, "9") != 0);
+    } while(strcmp(choice, "1") != 0 && strcmp(choice, "2") != 0 && strcmp(choice, "3") != 0 && strcmp(choice, "4") != 0
+    && strcmp(choice, "5") != 0 && strcmp(choice, "6") != 0 && strcmp(choice, "7") != 0 && strcmp(choice, "8") != 0 && strcmp(choice, "9") != 0);
 }
 else {
     printf("Wrong input!");
 }
 } while(strcmp(choice, "1") != 1 && strcmp(choice, "2") != 0);
+
+    free(choice);
     return 0;
 }
 
@@ -163,7 +166,7 @@ void rome()
     status();
     if (going == 0)
     {
-        return;
+        exit(0);
     }
     printf("From Rome you can teleport to 2 cities\n");
     do
@@ -218,7 +221,7 @@ void london()
     status();
     if (going == 0)
     {
-        return;
+        exit(0);
     }
         printf("From London you can teleport to 2 cities\n");
     do
@@ -273,7 +276,7 @@ void newyork()
     status();
     if (going == 0)
     {
-        return;
+        exit(0);
     }
         printf("From New York you can teleport to 2 cities\n");
     do
@@ -328,7 +331,7 @@ void riodejaneiro()
     status();
     if (going == 0)
     {
-        return;
+        exit(0);
     }
         printf("From Rio de Janeiro you can teleport to 2 cities\n");
     do
@@ -383,7 +386,7 @@ void moscow()
     status();
     if (going == 0)
     {
-        return;
+        exit(0);
     }
         printf("From Moscow you can teleport to 2 cities\n");
     do
@@ -438,7 +441,7 @@ void berlin()
     status();
     if (going == 0)
     {
-        return;
+        exit(0);
     }
         printf("From Berlin you can teleport to 2 cities\n");
     do
@@ -494,7 +497,7 @@ void paris()
     status();
     if (going == 0)
     {
-        return;
+        exit(0);
     }
         printf("From Paris you can teleport to 2 cities\n");
     do
@@ -549,7 +552,7 @@ void sydney()
     status();
     if (going == 0)
     {
-        return;
+        exit(0);
     }
     printf("From Sydney you can teleport to 5 cities\n");
     do
@@ -647,7 +650,7 @@ void tokyo()
     status();
     if (going == 0)
     {
-        return;
+        exit(0);
     }
     printf("From Tokyo you can teleport to 2 cities\n");
     do
