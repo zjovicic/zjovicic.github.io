@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bayesian Chronotype Guesser</title>
+  <style>
+    :root{
+      --bg:#0b0c10;
+      --panel:#12141b;
+      --muted:#9aa3b2;
+      --text:#e9eef7;
+      --accent:#7aa2ff;
+      --good:#6ee7b7;
+      --bad:#fb7185;
+      --line:#262a35;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 700px at 20% 0%, #151a2b 0%, var(--bg) 60%);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .app{
+      width:min(860px, 100%);
+      background: color-mix(in srgb, var(--panel) 92%, black 8%);
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    header{
+      padding:18px 18px 12px 18px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:260px;
+    }
+    h1{
+      margin:0;
+      font-weight:650;
+      letter-spacing:.2px;
+      font-size:18px;
+    }
+    .sub{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .probs{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:280px;
+      width:min(440px, 100%);
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .row strong{ color:var(--text); font-weight:600; }
+    .bar{
+      width:100%;
+      height:10px;
+      background:#0f1118;
+      border:1px solid var(--line);
+      border-radius:999px;
+      overflow:hidden;
+      position:relative;
+    }
+    .fillA{
+      height:100%;
+      width:50%;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 80%, #ffffff 20%), var(--accent));
+    }
+    .fillB{
+      position:absolute;
+      right:0; top:0;
+      height:100%;
+      width:50%;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--good) 70%, #ffffff 30%), var(--good));
+      opacity:.9;
+      mix-blend-mode:screen;
+    }
+
+    main{
+      padding:18px;
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:16px;
+    }
+    @media (max-width: 860px){
+      main{ grid-template-columns:1fr; }
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      padding:14px;
+    }
+    .qTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      background: rgba(255,255,255,.02);
+      user-select:none;
+    }
+    .question{
+      font-size:18px;
+      line-height:1.35;
+      margin:10px 0 14px 0;
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    button{
+      appearance:none;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:600;
+      cursor:pointer;
+      transition: transform .04s ease, background .15s ease, border-color .15s ease;
+    }
+    button:hover{ background: rgba(255,255,255,.06); border-color: color-mix(in srgb, var(--line) 70%, var(--accent) 30%); }
+    button:active{ transform: translateY(1px); }
+    button.primary{
+      border-color: color-mix(in srgb, var(--accent) 55%, var(--line) 45%);
+      background: color-mix(in srgb, var(--accent) 16%, transparent 84%);
+    }
+    button.ghost{
+      background: transparent;
+      color: var(--muted);
+      font-weight:600;
+    }
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .side h2{
+      margin:0 0 10px 0;
+      font-size:13px;
+      color:var(--muted);
+      font-weight:650;
+      letter-spacing:.2px;
+      text-transform:uppercase;
+    }
+    .history{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      max-height: 360px;
+      overflow:auto;
+      padding-right:4px;
+    }
+    .hItem{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      border-radius:12px;
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .hItem .meta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:12px;
+      color:var(--muted);
+      background: rgba(0,0,0,.16);
+      white-space:nowrap;
+    }
+    .math{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      color: color-mix(in srgb, var(--muted) 92%, white 8%);
+      line-height:1.35;
+      white-space:pre-wrap;
+    }
+    footer{
+      border-top:1px solid var(--line);
+      padding:12px 18px;
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    a{ color: color-mix(in srgb, var(--accent) 70%, white 30%); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Bayesian Chronotype Guesser">
+    <header>
+      <div class="title">
+        <h1>Bayesian Chronotype Guesser</h1>
+        <p class="sub">
+          10 yes/no questions. After each answer, the probabilities update using Bayes’ theorem.
+          Starts at 50% / 50%.
+        </p>
+      </div>
+
+      <div class="probs" aria-live="polite">
+        <div class="row">
+          <span><strong id="labelA">Morning person</strong>: <span id="pctA">50%</span></span>
+          <span><strong id="labelB">Night owl</strong>: <span id="pctB">50%</span></span>
+        </div>
+        <div class="bar" aria-hidden="true">
+          <div class="fillA" id="fillA"></div>
+          <div class="fillB" id="fillB"></div>
+        </div>
+        <div class="row">
+          <span>Current priors for next question</span>
+          <span class="tag" id="statusTag">Q1 of 10</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="qTop">
+          <div class="pill" id="qPill">Question 1 / 10</div>
+          <label class="pill" style="cursor:pointer;">
+            <input id="toggleMath" type="checkbox" style="transform: translateY(1px);" />
+            show math
+          </label>
+        </div>
+
+        <div class="question" id="questionText"></div>
+
+        <div class="actions">
+          <button class="primary" id="yesBtn">Yes</button>
+          <button class="primary" id="noBtn">No</button>
+          <button class="ghost" id="backBtn" title="Undo last answer">Undo</button>
+          <button class="ghost" id="resetBtn">Reset</button>
+        </div>
+
+        <div style="height:10px"></div>
+        <div class="math" id="mathBox" style="display:none;"></div>
+      </section>
+
+      <aside class="card side">
+        <h2>Answer history</h2>
+        <div class="history" id="history"></div>
+      </aside>
+    </main>
+
+    <footer>
+      <div>
+        Notes: This is a toy model. Likelihoods are reasonable guesses, not measured data.
+      </div>
+      <div>
+        Edit questions + likelihoods in the JS <span class="tag">CONFIG</span> section.
+      </div>
+    </footer>
+  </div>
+
+<script>
+/**
+ * CONFIG
+ * Two hypotheses: A vs B.
+ * Each question defines P(Yes | A) and P(Yes | B). "No" uses the complement.
+ * Keep probabilities away from 0 and 1 to avoid overconfidence.
+ */
+const CONFIG = {
+  labelA: "Morning person",
+  labelB: "Night owl",
+  questions: [
+    {
+      text: "On a free day, I naturally wake up before 8:00 without an alarm.",
+      pYesA: 0.75, pYesB: 0.25
+    },
+    {
+      text: "If I start something fun around 9:00pm, I often end up continuing past midnight.",
+      pYesA: 0.30, pYesB: 0.75
+    },
+    {
+      text: "My best focused work tends to happen before lunch (without forcing it).",
+      pYesA: 0.70, pYesB: 0.35
+    },
+    {
+      text: "I commonly get a clear 'second wind' late in the evening (around 10–11pm).",
+      pYesA: 0.25, pYesB: 0.70
+    },
+    {
+      text: "A meeting scheduled before 9:00am is usually fine for me (not just survivable).",
+      pYesA: 0.65, pYesB: 0.35
+    },
+    {
+      text: "If I could choose, I’d rather exercise in the evening than in the morning.",
+      pYesA: 0.35, pYesB: 0.65
+    },
+    {
+      text: "I rarely skip breakfast because I’m not hungry.",
+      pYesA: 0.70, pYesB: 0.40
+    },
+    {
+      text: "If I drink coffee after ~4:00pm, it noticeably threatens my sleep.",
+      pYesA: 0.65, pYesB: 0.45
+    },
+    {
+      text: "On vacation, my bedtime tends to drift later and later as the days go on.",
+      pYesA: 0.35, pYesB: 0.65
+    },
+    {
+      text: "Doing errands at 8:00am sounds better to me than doing them at 8:00pm.",
+      pYesA: 0.75, pYesB: 0.30
+    }
+  ],
+  // initial prior P(A)
+  priorA: 0.5
+};
+
+// ---------- Bayesian update helpers ----------
+function clamp01(x, eps = 1e-6){
+  return Math.min(1 - eps, Math.max(eps, x));
+}
+
+function bayesUpdate(priorA, pYesA, pYesB, answeredYes){
+  priorA = clamp01(priorA);
+  const priorB = 1 - priorA;
+
+  const likeA = answeredYes ? clamp01(pYesA) : clamp01(1 - pYesA);
+  const likeB = answeredYes ? clamp01(pYesB) : clamp01(1 - pYesB);
+
+  const num = likeA * priorA;
+  const den = (likeA * priorA) + (likeB * priorB);
+
+  // If den is ~0 (shouldn't happen with clamping), fall back to prior.
+  const postA = den > 0 ? (num / den) : priorA;
+  return clamp01(postA);
+}
+
+function fmtPct(p){
+  return `${Math.round(p * 100)}%`;
+}
+
+function fmt(p){
+  return (Math.round(p * 10000) / 10000).toFixed(4);
+}
+
+// ---------- App state ----------
+const state = {
+  idx: 0,                 // current question index
+  priorA: CONFIG.priorA,  // current P(A)
+  // stack of { idx, answerYes, priorBefore, postAfter, question }
+  history: []
+};
+
+// ---------- DOM ----------
+const labelAEl = document.getElementById("labelA");
+const labelBEl = document.getElementById("labelB");
+const pctAEl = document.getElementById("pctA");
+const pctBEl = document.getElementById("pctB");
+const fillAEl = document.getElementById("fillA");
+const fillBEl = document.getElementById("fillB");
+const statusTagEl = document.getElementById("statusTag");
+
+const qPillEl = document.getElementById("qPill");
+const questionTextEl = document.getElementById("questionText");
+
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const backBtn = document.getElementById("backBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const historyEl = document.getElementById("history");
+const toggleMathEl = document.getElementById("toggleMath");
+const mathBoxEl = document.getElementById("mathBox");
+
+// ---------- Render ----------
+function renderTop(){
+  labelAEl.textContent = CONFIG.labelA;
+  labelBEl.textContent = CONFIG.labelB;
+
+  const pA = clamp01(state.priorA);
+  const pB = 1 - pA;
+
+  pctAEl.textContent = fmtPct(pA);
+  pctBEl.textContent = fmtPct(pB);
+
+  fillAEl.style.width = `${(pA * 100).toFixed(2)}%`;
+  fillBEl.style.width = `${(pB * 100).toFixed(2)}%`;
+
+  const qNum = Math.min(state.idx + 1, CONFIG.questions.length);
+  statusTagEl.textContent = state.idx < CONFIG.questions.length
+    ? `Q${qNum} of ${CONFIG.questions.length}`
+    : `Done`;
+}
+
+function renderQuestion(){
+  const total = CONFIG.questions.length;
+
+  if(state.idx >= total){
+    qPillEl.textContent = `Complete`;
+    questionTextEl.textContent = `All questions answered. Hit Reset to try again.`;
+    yesBtn.disabled = true;
+    noBtn.disabled = true;
+    backBtn.disabled = state.history.length === 0;
+    renderMath(null);
+    return;
+  }
+
+  const q = CONFIG.questions[state.idx];
+  qPillEl.textContent = `Question ${state.idx + 1} / ${total}`;
+  questionTextEl.textContent = q.text;
+
+  yesBtn.disabled = false;
+  noBtn.disabled = false;
+  backBtn.disabled = state.history.length === 0;
+
+  renderMath(null);
+}
+
+function renderHistory(){
+  historyEl.innerHTML = "";
+  if(state.history.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "tag";
+    empty.textContent = "No answers yet.";
+    historyEl.appendChild(empty);
+    return;
+  }
+
+  for(const item of state.history.slice().reverse()){
+    const div = document.createElement("div");
+    div.className = "hItem";
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `
+      <span>Q${item.idx + 1}: <span class="tag">${item.answerYes ? "Yes" : "No"}</span></span>
+      <span>${CONFIG.labelA} ${fmtPct(item.postAfter)} / ${CONFIG.labelB} ${fmtPct(1 - item.postAfter)}</span>
+    `;
+
+    const qText = document.createElement("div");
+    qText.style.color = "rgba(233,238,247,.92)";
+    qText.style.fontSize = "13px";
+    qText.style.lineHeight = "1.35";
+    qText.textContent = item.question.text;
+
+    const math = document.createElement("div");
+    math.className = "math";
+    const likeA = item.answerYes ? item.question.pYesA : (1 - item.question.pYesA);
+    const likeB = item.answerYes ? item.question.pYesB : (1 - item.question.pYesB);
+    math.textContent =
+`prior P(A) = ${fmt(item.priorBefore)}
+likelihood P(E|A) = ${fmt(likeA)}
+likelihood P(E|B) = ${fmt(likeB)}
+posterior P(A|E) = ${fmt(item.postAfter)}`;
+
+    div.appendChild(meta);
+    div.appendChild(qText);
+    if(toggleMathEl.checked) div.appendChild(math);
+    historyEl.appendChild(div);
+  }
+}
+
+function renderMath(lastStep){
+  if(!toggleMathEl.checked){
+    mathBoxEl.style.display = "none";
+    mathBoxEl.textContent = "";
+    return;
+  }
+  mathBoxEl.style.display = "block";
+
+  if(!lastStep){
+    mathBoxEl.textContent =
+`Bayes update used:
+P(A|E) = P(E|A)P(A) / ( P(E|A)P(A) + P(E|B)P(B) )
+
+Current prior P(A) = ${fmt(state.priorA)}
+Current prior P(B) = ${fmt(1 - state.priorA)}`;
+    return;
+  }
+
+  mathBoxEl.textContent =
+`prior P(A) = ${fmt(lastStep.priorBefore)}
+prior P(B) = ${fmt(1 - lastStep.priorBefore)}
+P(E|A) = ${fmt(lastStep.likeA)}
+P(E|B) = ${fmt(lastStep.likeB)}
+
+posterior P(A|E) = ${fmt(lastStep.postAfter)}
+posterior P(B|E) = ${fmt(1 - lastStep.postAfter)}`;
+}
+
+function renderAll(){
+  renderTop();
+  renderQuestion();
+  renderHistory();
+}
+
+// ---------- Actions ----------
+function answer(answerYes){
+  const q = CONFIG.questions[state.idx];
+  const priorBefore = state.priorA;
+  const postAfter = bayesUpdate(state.priorA, q.pYesA, q.pYesB, answerYes);
+
+  const likeA = answerYes ? q.pYesA : (1 - q.pYesA);
+  const likeB = answerYes ? q.pYesB : (1 - q.pYesB);
+
+  state.history.push({
+    idx: state.idx,
+    answerYes,
+    priorBefore,
+    postAfter,
+    likeA,
+    likeB,
+    question: q
+  });
+
+  state.priorA = postAfter;
+  state.idx += 1;
+
+  renderTop();
+  renderQuestion();
+  renderHistory();
+  renderMath({ priorBefore, postAfter, likeA, likeB });
+}
+
+function undo(){
+  if(state.history.length === 0) return;
+  const last = state.history.pop();
+  state.idx = last.idx;
+  state.priorA = last.priorBefore;
+  renderAll();
+}
+
+function reset(){
+  state.idx = 0;
+  state.priorA = CONFIG.priorA;
+  state.history = [];
+  renderAll();
+}
+
+// ---------- Events ----------
+yesBtn.addEventListener("click", () => answer(true));
+noBtn.addEventListener("click", () => answer(false));
+backBtn.addEventListener("click", () => undo());
+resetBtn.addEventListener("click", () => reset());
+toggleMathEl.addEventListener("change", () => renderAll());
+
+// Init
+renderAll();
+</script>
+</body>
+</html>
