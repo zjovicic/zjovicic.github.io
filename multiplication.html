@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Multiplication Practice</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+            max-width: 650px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .size-btn {
+            padding: 25px 15px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .size-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5);
+        }
+        
+        .size-btn:active {
+            transform: translateY(-2px);
+        }
+        
+        .size-btn small {
+            display: block;
+            margin-top: 8px;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+        
+        .timers {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .timer-box {
+            flex: 1;
+            background: linear-gradient(145deg, #f5f7fa 0%, #e4e8ec 100%);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+        
+        .timer-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .timer-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a1a2e;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .timer-box.problem-timer .timer-value {
+            color: #e94560;
+        }
+        
+        .timer-box.session-timer .timer-value {
+            color: #0f3460;
+        }
+        
+        .progress {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .problem {
+            text-align: center;
+            font-size: 42px;
+            font-weight: bold;
+            color: #1a1a2e;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            letter-spacing: 2px;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        #answer-input {
+            flex: 1;
+            padding: 18px 20px;
+            font-size: 24px;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        #answer-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+        
+        #answer-input:disabled {
+            background: #f5f5f5;
+            color: #999;
+        }
+        
+        .check-btn {
+            padding: 18px 35px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
+        }
+        
+        .check-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 184, 148, 0.5);
+        }
+        
+        .check-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .feedback {
+            text-align: center;
+            padding: 25px;
+            border-radius: 16px;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 500;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .feedback.correct {
+            background: linear-gradient(145deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            display: block;
+            border: 2px solid #28a745;
+        }
+        
+        .feedback.incorrect {
+            background: linear-gradient(145deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            display: block;
+            border: 2px solid #dc3545;
+        }
+        
+        .feedback-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .feedback-time {
+            margin-top: 10px;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .next-btn {
+            display: none;
+            margin: 25px auto 0;
+            padding: 18px 50px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        .results {
+            text-align: center;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .result-item {
+            background: linear-gradient(145deg, #f5f7fa 0%, #e8ecef 100%);
+            padding: 25px 15px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        
+        .result-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .result-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+        
+        .result-item.accuracy .result-value {
+            color: #00b894;
+        }
+        
+        .result-item.avg-time .result-value {
+            color: #e94560;
+        }
+        
+        .result-item.total-time .result-value {
+            color: #0f3460;
+        }
+        
+        .restart-btn {
+            margin-top: 25px;
+            padding: 18px 50px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        .history {
+            margin-top: 30px;
+            max-height: 250px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .history h3 {
+            padding: 15px;
+            background: #f5f7fa;
+            margin: 0;
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-item.correct {
+            background: linear-gradient(90deg, #d4edda 0%, #ffffff 100%);
+        }
+        
+        .history-item.incorrect {
+            background: linear-gradient(90deg, #f8d7da 0%, #ffffff 100%);
+        }
+        
+        .history-problem {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+        
+        .history-result {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .history-time {
+            color: #666;
+            font-size: 13px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+            
+            .selection-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .problem {
+                font-size: 28px;
+                padding: 20px;
+            }
+            
+            .input-area {
+                flex-direction: column;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .timers {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Selection Screen -->
+        <div id="selection-screen" class="screen active">
+            <h1>🧮 Mental Multiplication</h1>
+            <p class="subtitle">Train your brain with multiplication challenges!</p>
+            <p style="text-align: center; color: #888; margin-bottom: 25px;">
+                Choose the size of numbers you want to practice:
+            </p>
+            <div class="selection-grid">
+                <button class="size-btn" onclick="startSession(2)">
+                    2-Figure
+                    <small>10 — 99</small>
+                </button>
+                <button class="size-btn" onclick="startSession(3)">
+                    3-Figure
+                    <small>100 — 999</small>
+                </button>
+                <button class="size-btn" onclick="startSession(4)">
+                    4-Figure
+                    <small>1,000 — 9,999</small>
+                </button>
+                <button class="size-btn" onclick="startSession(5)">
+                    5-Figure
+                    <small>10,000 — 99,999</small>
+                </button>
+                <button class="size-btn" onclick="startSession(6)">
+                    6-Figure
+                    <small>100,000 — 999,999</small>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Practice Screen -->
+        <div id="practice-screen" class="screen">
+            <div class="timers">
+                <div class="timer-box problem-timer">
+                    <div class="timer-label">⏱️ Problem Time</div>
+                    <div id="problem-timer" class="timer-value">00:00.0</div>
+                </div>
+                <div class="timer-box session-timer">
+                    <div class="timer-label">🕐 Session Time</div>
+                    <div id="session-timer" class="timer-value">00:00</div>
+                </div>
+            </div>
+            
+            <div id="progress" class="progress">Problem 1 of 10</div>
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div id="problem" class="problem">123 × 456</div>
+            
+            <div class="input-area">
+                <input type="text" id="answer-input" placeholder="Enter your answer" autocomplete="off">
+                <button id="check-btn" class="check-btn" onclick="checkAnswer()">CHECK</button>
+            </div>
+            
+            <div id="feedback" class="feedback"></div>
+            
+            <button id="next-btn" class="next-btn" onclick="nextProblem()">Next Problem →</button>
+        </div>
+        
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <h1>🏆 Session Complete!</h1>
+            <p class="subtitle">Here's how you performed:</p>
+            
+            <div class="results">
+                <div class="results-grid">
+                    <div class="result-item accuracy">
+                        <div class="result-label">Accuracy</div>
+                        <div id="accuracy" class="result-value">0/10</div>
+                    </div>
+                    <div class="result-item avg-time">
+                        <div class="result-label">Avg Time</div>
+                        <div id="avg-time" class="result-value">--</div>
+                    </div>
+                    <div class="result-item total-time">
+                        <div class="result-label">Total Time</div>
+                        <div id="total-time" class="result-value">00:00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="history" id="history"></div>
+            
+            <button class="restart-btn" onclick="restart()">🔄 Start New Session</button>
+        </div>
+    </div>
+    
+    <script>
+        let figureSize = 2;
+        let currentProblem = 0;
+        let num1, num2, correctAnswer;
+        let problemStartTime, sessionStartTime;
+        let problemTimerInterval, sessionTimerInterval;
+        let results = [];
+        const TOTAL_PROBLEMS = 10;
+        
+        function getRandomNumber(figures) {
+            const min = Math.pow(10, figures - 1);
+            const max = Math.pow(10, figures) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function formatProblemTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = (seconds % 60).toFixed(1);
+            return `${mins.toString().padStart(2, '0')}:${secs.padStart(4, '0')}`;
+        }
+        
+        function formatTimeDisplay(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = (seconds % 60).toFixed(1);
+            if (mins > 0) {
+                return `${mins}m ${secs}s`;
+            }
+            return `${secs}s`;
+        }
+        
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+        
+        function updateProblemTimer() {
+            const elapsed = (Date.now() - problemStartTime) / 1000;
+            document.getElementById('problem-timer').textContent = formatProblemTime(elapsed);
+        }
+        
+        function updateSessionTimer() {
+            const elapsed = (Date.now() - sessionStartTime) / 1000;
+            document.getElementById('session-timer').textContent = formatTime(elapsed);
+        }
+        
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        function updateProgressBar() {
+            const progress = ((currentProblem - 1) / TOTAL_PROBLEMS) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+        
+        function startSession(figures) {
+            figureSize = figures;
+            currentProblem = 0;
+            results = [];
+            
+            document.getElementById('problem-timer').textContent = '00:00.0';
+            document.getElementById('session-timer').textContent = '00:00';
+            
+            sessionStartTime = Date.now();
+            sessionTimerInterval = setInterval(updateSessionTimer, 100);
+            
+            showScreen('practice-screen');
+            generateProblem();
+        }
+        
+        function generateProblem() {
+            currentProblem++;
+            
+            num1 = getRandomNumber(figureSize);
+            num2 = getRandomNumber(figureSize);
+            correctAnswer = num1 * num2;
+            
+            document.getElementById('progress').textContent = `Problem ${currentProblem} of ${TOTAL_PROBLEMS}`;
+            updateProgressBar();
+            document.getElementById('problem').textContent = `${formatNumber(num1)} × ${formatNumber(num2)}`;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').disabled = false;
+            document.getElementById('check-btn').disabled = false;
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('next-btn').style.display = 'none';
+            
+            problemStartTime = Date.now();
+            clearInterval(problemTimerInterval);
+            document.getElementById('problem-timer').textContent = '00:00.0';
+            problemTimerInterval = setInterval(updateProblemTimer, 100);
+            
+            document.getElementById('answer-input').focus();
+        }
+        
+        function parseAnswer(input) {
+            // Remove commas, spaces, and other non-numeric characters except minus
+            const cleaned = input.replace(/[,\s]/g, '');
+            const parsed = parseInt(cleaned, 10);
+            return isNaN(parsed) ? null : parsed;
+        }
+        
+        function checkAnswer() {
+            const inputValue = document.getElementById('answer-input').value.trim();
+            
+            if (inputValue === '') {
+                document.getElementById('answer-input').focus();
+                document.getElementById('answer-input').style.borderColor = '#e94560';
+                setTimeout(() => {
+                    document.getElementById('answer-input').style.borderColor = '#e0e0e0';
+                }, 500);
+                return;
+            }
+            
+            clearInterval(problemTimerInterval);
+            
+            const userAnswer = parseAnswer(inputValue);
+            const timeTaken = (Date.now() - problemStartTime) / 1000;
+            const isCorrect = userAnswer === correctAnswer;
+            
+            results.push({
+                num1: num1,
+                num2: num2,
+                correctAnswer: correctAnswer,
+                userAnswer: userAnswer,
+                isCorrect: isCorrect,
+                time: timeTaken
+            });
+            
+            const feedback = document.getElementById('feedback');
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `
+                    <span class="feedback-icon">✅</span>
+                    <strong>Correct!</strong>
+                    <div class="feedback-time">Time: ${formatTimeDisplay(timeTaken)}</div>
+                `;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `
+                    <span class="feedback-icon">❌</span>
+                    <strong>Incorrect</strong>
+                    <div>The correct answer was: <strong>${formatNumber(correctAnswer)}</strong></div>
+                    <div class="feedback-time">Time: ${formatTimeDisplay(timeTaken)}</div>
+                `;
+            }
+            
+            document.getElementById('answer-input').disabled = true;
+            document.getElementById('check-btn').disabled = true;
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.style.display = 'block';
+            
+            if (currentProblem < TOTAL_PROBLEMS) {
+                nextBtn.textContent = 'Next Problem →';
+            } else {
+                nextBtn.textContent = 'View Results 🏆';
+            }
+        }
+        
+        function nextProblem() {
+            if (currentProblem >= TOTAL_PROBLEMS) {
+                showResults();
+            } else {
+                generateProblem();
+            }
+        }
+        
+        function showResults() {
+            clearInterval(sessionTimerInterval);
+            clearInterval(problemTimerInterval);
+            
+            const totalSessionTime = (Date.now() - sessionStartTime) / 1000;
+            const correctAnswers = results.filter(r => r.isCorrect);
+            const accuracy = correctAnswers.length;
+            
+            let avgTimeText = '--';
+            if (correctAnswers.length > 0) {
+                const totalCorrectTime = correctAnswers.reduce((sum, r) => sum + r.time, 0);
+                const avgTime = totalCorrectTime / correctAnswers.length;
+                avgTimeText = formatTimeDisplay(avgTime);
+            }
+            
+            document.getElementById('accuracy').textContent = `${accuracy}/${TOTAL_PROBLEMS}`;
+            document.getElementById('accuracy').style.color = accuracy >= 7 ? '#00b894' : accuracy >= 5 ? '#fdcb6e' : '#e94560';
+            document.getElementById('avg-time').textContent = avgTimeText;
+            document.getElementById('total-time').textContent = formatTime(totalSessionTime);
+            
+            // Build history
+            let historyHTML = '<h3>📋 Problem History</h3>';
+            results.forEach((r, i) => {
+                const icon = r.isCorrect ? '✅' : '❌';
+                const yourAnswer = r.userAnswer !== null ? formatNumber(r.userAnswer) : 'No answer';
+                historyHTML += `
+                    <div class="history-item ${r.isCorrect ? 'correct' : 'incorrect'}">
+                        <span class="history-problem">
+                            ${formatNumber(r.num1)} × ${formatNumber(r.num2)} = ${formatNumber(r.correctAnswer)}
+                        </span>
+                        <span class="history-result">
+                            <span class="history-time">${formatTimeDisplay(r.time)}</span>
+                            <span>${icon}</span>
+                        </span>
+                    </div>
+                `;
+            });
+            document.getElementById('history').innerHTML = historyHTML;
+            
+            // Update progress bar to full
+            document.getElementById('progress-bar').style.width = '100%';
+            
+            showScreen('results-screen');
+        }
+        
+        function restart() {
+            clearInterval(sessionTimerInterval);
+            clearInterval(problemTimerInterval);
+            document.getElementById('problem-timer').textContent = '00:00.0';
+            document.getElementById('session-timer').textContent = '00:00';
+            document.getElementById('progress-bar').style.width = '0%';
+            showScreen('selection-screen');
+        }
+        
+        // Allow Enter key to submit or go to next
+        document.getElementById('answer-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (!this.disabled) {
+                    checkAnswer();
+                }
+            }
+        });
+        
+        // Global keyboard handler for next problem
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const nextBtn = document.getElementById('next-btn');
+                if (nextBtn.style.display === 'block') {
+                    nextProblem();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
