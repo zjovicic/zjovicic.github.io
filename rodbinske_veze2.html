@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Srpski Rodbinski Odnosi - Kviz v2.0</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #e74c3c;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #333;
+            --success: #27ae60;
+            --error: #c0392b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        h1 { margin: 0 0 15px 0; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
+        p { color: #666; line-height: 1.6; margin-bottom: 20px; }
+
+        .hidden { display: none !important; }
+
+        /* Form Elements */
+        .option-group { 
+            margin: 15px 0; 
+            text-align: left; 
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .option-title { font-size: 14px; text-transform: uppercase; color: #888; font-weight: bold; margin-bottom: 10px; display: block;}
+
+        label { 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center;
+            margin-bottom: 8px; 
+            padding: 8px; 
+            border-radius: 6px; 
+            transition: 0.2s; 
+        }
+        label:hover { background-color: #e9ecef; }
+        input[type="radio"] { margin-right: 12px; accent-color: var(--primary); transform: scale(1.2); }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+            text-align: center;
+        }
+        input[type="text"]:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(44, 62, 80, 0.1); }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 25px;
+            width: 100%;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        button:hover { background-color: #34495e; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+
+        /* Quiz UI */
+        .question-box { 
+            font-size: 28px; 
+            font-weight: 800; 
+            margin: 30px 0; 
+            color: var(--primary);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .progress { font-size: 14px; color: #aaa; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .feedback { margin-top: 20px; font-weight: 600; min-height: 24px; padding: 10px; border-radius: 8px; }
+        .feedback.correct { color: var(--success); background: #dff0d8; }
+        .feedback.wrong { color: var(--error); background: #f2dede; }
+
+        /* Results */
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            margin: 0 auto 25px;
+            font-weight: 800;
+            box-shadow: 0 10px 20px rgba(44, 62, 80, 0.3);
+        }
+        .grade-display { font-size: 32px; margin-bottom: 15px; color: var(--primary); font-weight: bold; }
+        .roast-msg { font-style: italic; color: #555; font-size: 19px; margin-bottom: 30px; padding: 0 20px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- START SCREEN -->
+        <div id="start-screen">
+            <h1>Rodbinski Odnosi</h1>
+            <p>Testiraj svoje znanje srpske rodbinske terminologije. <br>Izaberi podešavanja i kreni!</p>
+            
+            <div class="option-group">
+                <span class="option-title">Izaberi dijalekat</span>
+                <label><input type="radio" name="dialect" value="ek" checked> <span>Ekavica (tast, deda, ujak)</span></label>
+                <label><input type="radio" name="dialect" value="ijk"> <span>Ijekavica (punac, djed, ujak)</span></label>
+            </div>
+
+            <div class="option-group">
+                <span class="option-title">Način igre</span>
+                <label><input type="radio" name="mode" value="term_to_def" checked> <span>Ti pišeš definiciju (npr. dobiješ "Djever" -> pišeš "mužev brat")</span></label>
+                <label><input type="radio" name="mode" value="def_to_term"> <span>Ti pišeš reč (npr. dobiješ "mužev brat" -> pišeš "Djever")</span></label>
+            </div>
+
+            <button onclick="startQuiz()">Započni Kviz</button>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="quiz-screen" class="hidden">
+            <div class="progress">Pitanje <span id="q-current">1</span> / <span id="q-total">20</span></div>
+            <div class="question-box"><span id="question-text">Pitanje</span></div>
+            
+            <input type="text" id="user-input" placeholder="Upiši odgovor..." autocomplete="off">
+            <div id="feedback-msg" class="feedback hidden"></div>
+            
+            <button id="submit-btn" onclick="submitAnswer()">Potvrdi</button>
+            <button id="next-btn" class="hidden" onclick="nextQuestion()">Sledeće pitanje</button>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="result-screen" class="hidden">
+            <div class="score-circle" id="final-score">0%</div>
+            <div class="grade-display" id="final-grade">Ocena: 5</div>
+            <p class="roast-msg" id="final-comment">...</p>
+            <button onclick="location.reload()">Igraj ponovo</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * BAZA PODATAKA v2.0
+         * valid_combs: Niz nizova. Svaki podniz je jedna ispravna kombinacija ključnih reči.
+         * Npr. za Pašenoga: [["muz", "zena", "sestra"]] (Muž ženine sestre) ILI [["muz", "svastika"]] (Muž svastike)
+         */
+        const database = [
+            { 
+                id: 1, term_ek: "Stric", term_ijk: "Stric", 
+                def_ek: "Očev brat", def_ijk: "Očev brat", 
+                valid_combs: [ ["ocev", "brat"], ["tatin", "brat"] ], 
+                valid_terms: ["stric", "cica", "čiča"] 
+            },
+            { 
+                id: 2, term_ek: "Ujak", term_ijk: "Ujak", 
+                def_ek: "Majčin brat", def_ijk: "Majčin brat", 
+                valid_combs: [ ["majcin", "brat"], ["mamin", "brat"] ], 
+                valid_terms: ["ujak", "ujo"] 
+            },
+            { 
+                id: 3, term_ek: "Tetka", term_ijk: "Tetka", 
+                def_ek: "Očeva ili majčina sestra", def_ijk: "Očeva ili majčina sestra", 
+                valid_combs: [ ["ocev", "sestra"], ["majcin", "sestra"], ["tatin", "sestra"], ["mamin", "sestra"] ], 
+                valid_terms: ["tetka"] 
+            },
+            { 
+                id: 4, term_ek: "Svekar", term_ijk: "Svekar", 
+                def_ek: "Mužev otac", def_ijk: "Mužev otac", 
+                valid_combs: [ ["muz", "otac"] ], // Pokriva: Mužev otac, Otac od muža, Muževljev tata
+                valid_terms: ["svekar"] 
+            },
+            { 
+                id: 5, term_ek: "Svekrva", term_ijk: "Svekrva", 
+                def_ek: "Muževljeva majka", def_ijk: "Muževljeva majka", 
+                valid_combs: [ ["muz", "majka"] ], 
+                valid_terms: ["svekrva"] 
+            },
+            { 
+                id: 6, term_ek: "Tast", term_ijk: "Punac", 
+                def_ek: "Ženin otac", def_ijk: "Ženin otac", 
+                valid_combs: [ ["zena", "otac"] ], 
+                valid_terms: ["tast", "punac"] 
+            },
+            { 
+                id: 7, term_ek: "Tašta", term_ijk: "Punica", 
+                def_ek: "Ženina majka", def_ijk: "Ženina majka", 
+                valid_combs: [ ["zena", "majka"] ], 
+                valid_terms: ["tasta", "tašta", "punica"] 
+            },
+            { 
+                id: 8, term_ek: "Djever", term_ijk: "Đever", 
+                def_ek: "Mužev brat", def_ijk: "Mužev brat", 
+                valid_combs: [ ["muz", "brat"] ], 
+                valid_terms: ["djever", "đever", "dever"] 
+            },
+            { 
+                id: 9, term_ek: "Zaova", term_ijk: "Zaova", 
+                def_ek: "Muževljeva sestra", def_ijk: "Muževljeva sestra", 
+                valid_combs: [ ["muz", "sestra"] ], 
+                valid_terms: ["zaova"] 
+            },
+            { 
+                id: 10, term_ek: "Jetra", term_ijk: "Jetra", 
+                def_ek: "Žena muževljevog brata", def_ijk: "Žena muževljevog brata", 
+                valid_combs: [ ["zena", "muz", "brat"], ["djever", "zena"], ["dever", "zena"] ], 
+                valid_terms: ["jetra", "jetrva"] 
+            },
+            { 
+                id: 11, term_ek: "Šurak", term_ijk: "Šura", 
+                def_ek: "Ženin brat", def_ijk: "Ženin brat", 
+                valid_combs: [ ["zena", "brat"] ], 
+                valid_terms: ["surak", "šurak", "sura", "šura"] 
+            },
+            { 
+                id: 12, term_ek: "Svastika", term_ijk: "Svastika", 
+                def_ek: "Ženina sestra", def_ijk: "Ženina sestra", 
+                valid_combs: [ ["zena", "sestra"] ], 
+                valid_terms: ["svastika", "svaja"] 
+            },
+            { 
+                id: 13, term_ek: "Pašenog", term_ijk: "Pašanac", 
+                def_ek: "Muž ženine sestre", def_ijk: "Muž ženine sestre", 
+                valid_combs: [ ["muz", "zena", "sestra"], ["muz", "svastika"], ["muz", "svaja"] ], 
+                valid_terms: ["pasenog", "pasanac", "pašenog", "pašanac"] 
+            },
+            { 
+                id: 14, term_ek: "Zet", term_ijk: "Zet", 
+                def_ek: "Ćerkin ili sestrin muž", def_ijk: "Kćerkin ili sestrin muž", 
+                valid_combs: [ ["cerka", "muz"], ["sestra", "muz"], ["kci", "muz"] ], 
+                valid_terms: ["zet"] 
+            },
+            { 
+                id: 15, term_ek: "Snaja", term_ijk: "Snaha", 
+                def_ek: "Sinovljeva ili bratova žena", def_ijk: "Sinovljeva ili bratova žena", 
+                valid_combs: [ ["sin", "zena"], ["brat", "zena"], ["sin", "supruga"] ], 
+                valid_terms: ["snaja", "snaha"] 
+            },
+            { 
+                id: 16, term_ek: "Sinovac", term_ijk: "Sinovac", 
+                def_ek: "Bratov sin", def_ijk: "Bratov sin", 
+                valid_combs: [ ["brat", "sin"] ], 
+                valid_terms: ["sinovac"] 
+            },
+            { 
+                id: 17, term_ek: "Sinovica", term_ijk: "Sinovica", 
+                def_ek: "Bratova ćerka", def_ijk: "Bratova kći", 
+                valid_combs: [ ["brat", "cerka"], ["brat", "kci"] ], 
+                valid_terms: ["sinovica"] 
+            },
+            { 
+                id: 18, term_ek: "Sestrić", term_ijk: "Sestrić", 
+                def_ek: "Sestrin sin", def_ijk: "Sestrin sin", 
+                valid_combs: [ ["sestra", "sin"] ], 
+                valid_terms: ["sestric", "sestrić"] 
+            },
+            { 
+                id: 19, term_ek: "Prijatelj", term_ijk: "Prijatelj", 
+                def_ek: "Otac zeta ili snaje", def_ijk: "Otac zeta ili snaje", 
+                valid_combs: [ ["otac", "zet"], ["otac", "snaja"], ["otac", "snaha"] ], 
+                valid_terms: ["prijatelj"] 
+            },
+            { 
+                id: 20, term_ek: "Kurđel", term_ijk: "Kurđel", 
+                def_ek: "Otac čukundede", def_ijk: "Otac čukundjeda", 
+                valid_combs: [ ["otac", "cukunded"], ["otac", "cukundjed"] ], 
+                valid_terms: ["kurdjel", "kurđel"] 
+            }
+        ];
+
+        // STATE
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let settings = { dialect: 'ek', mode: 'term_to_def' };
+
+        // DOM ELEMENTS
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const questionText = document.getElementById('question-text');
+        const userInput = document.getElementById('user-input');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const qCurrent = document.getElementById('q-current');
+        const qTotal = document.getElementById('q-total');
+
+        // UTILS
+        function normalize(str) {
+            return str.toLowerCase()
+                .replace(/č/g, 'c').replace(/ć/g, 'c')
+                .replace(/š/g, 's').replace(/đ/g, 'dj')
+                .replace(/ž/g, 'z')
+                .trim();
+        }
+
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        // LOGIC
+        function startQuiz() {
+            settings.dialect = document.querySelector('input[name="dialect"]:checked').value;
+            settings.mode = document.querySelector('input[name="mode"]:checked').value;
+
+            let allQ = [...database];
+            shuffle(allQ);
+            currentQuestions = allQ.slice(0, 20);
+
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            qTotal.innerText = currentQuestions.length;
+
+            currentIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = currentQuestions[currentIndex];
+            qCurrent.innerText = currentIndex + 1;
+            userInput.value = '';
+            userInput.disabled = false;
+            userInput.focus();
+            feedbackMsg.innerText = '';
+            feedbackMsg.className = 'feedback hidden';
+            submitBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+
+            if (settings.mode === 'term_to_def') {
+                questionText.innerText = settings.dialect === 'ek' ? q.term_ek : q.term_ijk;
+                userInput.placeholder = "Šta to znači?";
+            } else {
+                questionText.innerText = settings.dialect === 'ek' ? q.def_ek : q.def_ijk;
+                userInput.placeholder = "Ko je to?";
+            }
+        }
+
+        function checkAnswer(userStr, question) {
+            const cleanUser = normalize(userStr);
+            
+            if (settings.mode === 'term_to_def') {
+                // NOVA LOGIKA ZA DEFINICIJE
+                
+                // Mapa sinonima - grupisanje izraza pod zajednički "ključ"
+                const synonyms = {
+                    "ocev": ["ocev", "tatin", "caletov", "od oca", "od tate", "ocuh"],
+                    "majcin": ["majcin", "mamin", "kevino", "od majke", "od mame"],
+                    
+                    // Ključna promena: "muzev" i "muzevljev" i "od muza" su isto
+                    "muz": ["muz", "suprug", "muzev", "muzevljev", "suprugov", "od muza", "sa muzem"],
+                    "zena": ["zena", "supruga", "zenin", "suprugin", "od zene", "sa zenom"],
+                    
+                    "brat": ["brat", "burazer", "bata", "od brata"],
+                    "sestra": ["sestra", "seka", "od sestre"],
+                    "otac": ["otac", "tata", "cale", "tajo"],
+                    "majka": ["majka", "mama", "keva"],
+                    "sin": ["sin"],
+                    "cerka": ["cerka", "kci", "kcer"],
+                    "cukunded": ["cukunded", "cukundeda"],
+                    "cukundjed": ["cukundjed", "cukundjeda"],
+                    "svastika": ["svastika", "svastike", "svaje"],
+                    "djever": ["djever", "dever", "djevera", "devera"],
+                    "snaja": ["snaja", "snaha", "snaje", "snahe"],
+                    "zet": ["zet", "zeta"]
+                };
+
+                // Prolazimo kroz sve moguće ispravne kombinacije definisane u bazi (valid_combs)
+                // Ako korisnik zadovolji BILO KOJU kombinaciju, odgovor je tačan.
+                
+                let isCorrect = false;
+
+                for (let combo of question.valid_combs) {
+                    let comboMet = true;
+                    
+                    // Za svaku reč u kombinaciji (npr "muz", "svastika")
+                    for (let reqKey of combo) {
+                        let wordFound = false;
+                        
+                        // Nađemo sve sinonime za tu ključnu reč
+                        let possibleWords = synonyms[reqKey] || [reqKey];
+                        
+                        // Proverimo da li se BILO KOJI sinonim nalazi u onome što je korisnik upisao
+                        for (let w of possibleWords) {
+                            // Koristimo regex boundary (\b) da ne mešamo reči (npr "sin" unutar "sinovac")
+                            // Ali za jednostavnost i robusnost "includes" je često dovoljan ovde ako su reči duže
+                            if (cleanUser.includes(normalize(w))) {
+                                wordFound = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!wordFound) {
+                            comboMet = false;
+                            break; 
+                        }
+                    }
+
+                    if (comboMet) {
+                        isCorrect = true;
+                        break;
+                    }
+                }
+
+                return isCorrect;
+
+            } else {
+                // Mode 2: Reč
+                return question.valid_terms.some(term => cleanUser === normalize(term));
+            }
+        }
+
+        function submitAnswer() {
+            const val = userInput.value;
+            if (!val) return;
+
+            const q = currentQuestions[currentIndex];
+            const isCorrect = checkAnswer(val, q);
+
+            userInput.disabled = true;
+            submitBtn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+            feedbackMsg.classList.remove('hidden');
+
+            if (isCorrect) {
+                score++;
+                feedbackMsg.innerText = "Tako je!";
+                feedbackMsg.className = 'feedback correct';
+            } else {
+                feedbackMsg.className = 'feedback wrong';
+                let correctText = "";
+                if (settings.mode === 'term_to_def') {
+                    correctText = settings.dialect === 'ek' ? q.def_ek : q.def_ijk;
+                } else {
+                    correctText = settings.dialect === 'ek' ? q.term_ek : q.term_ijk;
+                }
+                feedbackMsg.innerText = "Nije. Tačno je: " + correctText;
+            }
+            
+            nextBtn.focus();
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            const percentage = Math.round((score / currentQuestions.length) * 100);
+            document.getElementById('final-score').innerText = percentage + "%";
+
+            let grade = 5;
+            let msg = "";
+
+            if (percentage < 50) {
+                grade = 5;
+                msg = "Brukaš familiju. Na sledećoj slavi sediš u dečijoj sobi.";
+            } else if (percentage < 60) {
+                grade = 6;
+                msg = "Jedva šestica. Znaš ko ti je tata, a za ostale nisi siguran.";
+            } else if (percentage < 70) {
+                grade = 7;
+                msg = "Sedmica. Znaš užu rodbinu, ali mešaš pašenoga i šuraka.";
+            } else if (percentage < 80) {
+                grade = 8;
+                msg = "Osmica! Vrlo dobar! Možeš da sediš sa odraslima.";
+            } else if (percentage < 90) {
+                grade = 9;
+                msg = "Devetka! Odlično! Ti si onaj što svima objašnjava ko je kome šta na svadbi.";
+            } else {
+                grade = 10;
+                msg = "Desetka! Doktorat iz rodoslova! Ti držiš zdravicu i znaš imena čukundedova.";
+            }
+
+            document.getElementById('final-grade').innerText = percentage < 50 ? "Pao/la si (5)" : "Ocena: " + grade;
+            document.getElementById('final-comment').innerText = msg;
+        }
+
+        userInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                submitAnswer();
+            }
+        });
+
+    </script>
+</body>
+</html>
