@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thousands and Thousands / Hiljade i Hiljade</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #27ae60;
+            --belt-white: #f5f5f5;
+            --belt-yellow: #f1c40f;
+            --belt-orange: #e67e22;
+            --belt-blue: #3498db;
+            --belt-red: #e74c3c;
+            --belt-brown: #795548;
+            --belt-black: #000000;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: #f4f7f6; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; padding-bottom: 50px; }
+        
+        /* Header */
+        header { text-align: center; margin-bottom: 30px; position: relative; padding-top: 10px; }
+        h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
+        #app-subtitle { color: #7f8c8d; font-size: 0.9rem; margin-top: 5px; }
+        
+        .header-controls { position: absolute; top: 0; right: 0; display: flex; gap: 15px; }
+        .control-btn { cursor: pointer; font-weight: bold; color: var(--accent); user-select: none; font-size: 0.9rem; }
+        .info-btn { background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        
+        /* Card Styles */
+        .exercise-card { background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; transition: transform 0.2s; border-left: 5px solid var(--primary); }
+        .exercise-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .exercise-title { font-size: 1.3rem; font-weight: bold; color: var(--dark); }
+        .exercise-desc { font-size: 0.85rem; color: #777; margin-bottom: 15px; font-style: italic; }
+
+        /* Stats in Card */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; font-size: 0.9rem; }
+        .stat-item strong { display: block; font-size: 1.3rem; color: var(--primary); }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #95a5a6; }
+        
+        /* Belt Visualization */
+        .belt-display { height: 25px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; color: #333; font-weight: bold; font-size: 0.85rem; text-shadow: 0 0 2px rgba(255,255,255,0.5); position: relative; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+        .belt-white { background: var(--belt-white); color: #333; }
+        .belt-yellow { background: var(--belt-yellow); color: #333; }
+        .belt-orange { background: var(--belt-orange); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .belt-blue { background: var(--belt-blue); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .belt-red { background: var(--belt-red); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .belt-brown { background: var(--belt-brown); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .belt-black { background: var(--belt-black); color: white; border-color: #444; background-image: linear-gradient(45deg, #000 25%, #1a1a1a 25%, #1a1a1a 50%, #000 50%, #000 75%, #1a1a1a 75%, #1a1a1a 100%); background-size: 20px 20px; }
+
+        /* Progress Bar */
+        .progress-container { width: 100%; background-color: #ecf0f1; border-radius: 5px; height: 8px; overflow: hidden; margin-top: 5px; }
+        .progress-bar { height: 100%; background-color: var(--success); width: 0%; transition: width 0.5s; }
+        .quest-text { font-size: 0.75rem; text-align: center; color: #7f8c8d; margin-top: 5px; margin-bottom: 15px; }
+
+        /* Inputs */
+        .input-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+        input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 70px; font-size: 1rem; }
+        select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; }
+        button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; font-size: 1rem; }
+        button:hover { opacity: 0.9; }
+        .btn-add { background: var(--success); color: white; flex-grow: 1; }
+        .btn-sub { background: var(--accent); color: white; width: 40px; }
+        .btn-stats { background: transparent; color: var(--primary); font-size: 1.2rem; padding: 5px; }
+        
+        /* Detailed Stats View */
+        #stats-view { display: none; background: white; position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; z-index: 100; padding: 20px; box-sizing: border-box; }
+        .back-btn { background: #7f8c8d; color: white; margin-bottom: 20px; display: inline-block; }
+        .chart-container { margin-bottom: 30px; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fff; }
+        canvas { width: 100%; height: 250px; display: block; }
+        .pie-container { width: 200px; height: 200px; margin: 0 auto; position: relative; border-radius: 50%; background: conic-gradient(var(--success) 0% 0%, #eee 0% 100%); }
+        .pie-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; font-size: 1.2rem; }
+
+        /* Certificate */
+        #certificate-view { display: none; text-align: center; padding: 40px; border: 15px double var(--primary); margin: 0; background: #fffdf0; height: 100%; box-sizing: border-box; overflow-y: auto; }
+        .cert-title { font-family: "Times New Roman", serif; font-size: 2.5rem; margin-bottom: 20px; color: var(--dark); text-transform: uppercase; letter-spacing: 5px; border-bottom: 2px solid var(--dark); display: inline-block; }
+        .cert-body { font-size: 1.2rem; line-height: 1.6; margin-bottom: 40px; font-family: "Georgia", serif; }
+        .cert-highlight { font-size: 2rem; color: var(--accent); font-weight: bold; display: block; margin: 20px 0; text-shadow: 1px 1px 0px rgba(0,0,0,0.1); }
+        .cert-signature { margin-top: 50px; border-top: 1px solid #333; width: 250px; margin-left: auto; margin-right: auto; padding-top: 10px; font-style: italic; }
+        .print-btn { background: var(--dark); color: white; padding: 10px 20px; margin-top: 20px; display: inline-block; }
+
+        /* Modal for messages & info */
+        .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal-content { background-color: white; padding: 30px; border-radius: 12px; text-align: center; max-width: 500px; width: 90%; animation: popIn 0.3s; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .info-content { text-align: left; line-height: 1.6; }
+        .info-content h3 { color: var(--accent); border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .info-warning { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 5px; color: #856404; font-size: 0.9rem; margin-top: 15px; }
+        
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        @media print {
+            body * { visibility: hidden; }
+            #certificate-view, #certificate-view * { visibility: visible; }
+            #certificate-view { position: fixed; left: 0; top: 0; width: 100%; height: 100%; margin: 0; border: 5px double black; }
+            .print-btn, .back-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-view">
+    <header>
+        <div class="header-controls">
+            <div class="control-btn" onclick="toggleLanguage()">SRB | ENG</div>
+            <div class="control-btn info-btn" onclick="showInfo()">?</div>
+        </div>
+        <h1 id="app-title">Thousands & Thousands</h1>
+        <p id="app-subtitle">The linguistic path to fitness</p>
+    </header>
+
+    <div id="exercises-list">
+        <!-- Exercise Cards Injected via JS -->
+    </div>
+</div>
+
+<div id="stats-view">
+    <button class="back-btn" onclick="closeStats()">← <span id="btn-back-txt">Back</span></button>
+    <h2 id="stats-title-exercise" style="text-align: center; margin-top:0;">Statistics</h2>
+    
+    <div class="chart-container" style="text-align: center;">
+        <h3 id="chart-goal-title">Main Quest (4000)</h3>
+        <div id="big-pie" class="pie-container">
+            <div class="pie-text" id="pie-text">0%</div>
+        </div>
+        <p id="stats-quest-detail" style="color:#777; margin-top: 10px;"></p>
+    </div>
+
+    <div class="chart-container">
+        <h3 id="chart-daily-title">Daily Activity</h3>
+        <canvas id="dailyChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h3 id="chart-cumulative-title">Cumulative Growth</h3>
+        <canvas id="cumulativeChart"></canvas>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px; padding-bottom: 40px;" id="cert-btn-container">
+        <!-- Cert button appears here if applicable -->
+    </div>
+</div>
+
+<div id="certificate-view">
+    <button class="print-btn back-btn" style="float:left;" onclick="document.getElementById('certificate-view').style.display='none'; document.getElementById('stats-view').style.display='block'">← Back</button>
+    <br style="clear:both;">
+    <h1 class="cert-title">CERTIFICATE</h1>
+    <div class="cert-body">
+        <p><span id="cert-text-1">This officially certifies that</span></p>
+        <h2 id="cert-name" contenteditable="true" style="border-bottom: 2px dashed #999; display: inline-block; min-width: 300px; color: var(--primary);">[ Your Name ]</h2>
+        <p><span id="cert-text-2">has rightfully earned the claim of having done</span></p>
+        <span class="cert-highlight">THOUSANDS AND THOUSANDS</span>
+        <h3 id="cert-exercise" style="font-size: 1.5rem; text-transform: uppercase;">OF PUSHUPS</h3>
+        <p id="cert-date" style="color: #666; font-size: 1rem; margin-top:30px;">Date: </p>
+    </div>
+    <div class="cert-signature">Grandmaster of Repetition</div>
+    <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div id="msg-modal" class="modal">
+    <div class="modal-content">
+        <h2 id="modal-title" style="color: var(--success);">Congratulation!</h2>
+        <p id="modal-body" style="font-size: 1.1rem;">You reached a new level.</p>
+        <button onclick="document.getElementById('msg-modal').style.display='none'" class="btn-add" style="margin-top: 20px; max-width: 100px;">OK</button>
+    </div>
+</div>
+
+<div id="info-modal" class="modal">
+    <div class="modal-content info-content">
+        <h2 id="info-title" style="text-align: center; color: var(--primary);">About The Goal</h2>
+        <div id="info-body">
+            <!-- Injected via JS -->
+        </div>
+        <div class="info-warning" id="info-warning">
+            <!-- Warning Injected via JS -->
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="closeInfo()" class="btn-add">Let's Start!</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- CONFIGURATION & DATA ---
+
+const exercisesDef = [
+    { id: 'pushups', nameEn: 'Pushups', nameSr: 'Sklekovi', unitEn: 'reps', unitSr: 'pon.', descEn: 'Standard pushups', descSr: 'Standardni sklekovi' },
+    { id: 'situps', nameEn: 'Situps', nameSr: 'Trbušnjaci', unitEn: 'reps', unitSr: 'pon.', descEn: 'Core strength', descSr: 'Jačanje trupa' },
+    { id: 'squats', nameEn: 'Squats', nameSr: 'Čučnjevi', unitEn: 'reps', unitSr: 'pon.', descEn: 'Leg strength', descSr: 'Snaga nogu' },
+    { id: 'biceps', nameEn: 'Bicep Curls', nameSr: 'Biceps pregib', unitEn: 'pairs', unitSr: 'parova', descEn: 'Left + Right = 1 Rep', descSr: 'Lijeva + Desna = 1 Pon.' },
+    { id: 'triceps', nameEn: 'Tricep Ext.', nameSr: 'Triceps ekst.', unitEn: 'pairs', unitSr: 'parova', descEn: 'Overhead (L+R = 1)', descSr: 'Iznad glave (L+D = 1)' },
+    { id: 'walking', nameEn: 'Walking', nameSr: 'Hodanje', unitEn: 'stadia', unitSr: 'stadija', descEn: 'Ancient Run (1 St = 185m)', descSr: 'Antička trka (1 St = 185m)', isDistance: true },
+    { id: 'jumps', nameEn: 'Jumps', nameSr: 'Skokovi', unitEn: 'reps', unitSr: 'pon.', descEn: 'Vertical jumps', descSr: 'Skokovi uvis iz mjesta' },
+    { id: 'overhead', nameEn: 'Overhead Press', nameSr: 'Rameni potisak', unitEn: 'pairs', unitSr: 'parova', descEn: 'Dumbbell press (L+R=1)', descSr: 'Bučice (L+D=1)' },
+    { id: 'deadlift', nameEn: 'Deadlift', nameSr: 'Mrtvo dizanje', unitEn: 'reps', unitSr: 'pon.', descEn: 'Heavy lift from floor', descSr: 'Dizanje s poda' },
+    { id: 'olympic', nameEn: 'Olympic Lift', nameSr: 'Olimpijsko diz.', unitEn: 'reps', unitSr: 'pon.', descEn: 'Clean & Press style', descSr: 'Od poda do iznad glave' },
+    { id: 'chess', nameEn: 'Chess', nameSr: 'Šah', unitEn: 'games', unitSr: 'partija', descEn: 'Blitz/Rapid (min 3|2)', descSr: 'Blitz/Rapid (min 3|2)' }
+];
+
+const milestones = [
+    { threshold: 0, titleEn: 'Beginner', titleSr: 'Početnik' },
+    { threshold: 6, titleEn: 'Half Dozen', titleSr: 'Pola tuceta' },
+    { threshold: 12, titleEn: 'Dozen', titleSr: 'Tuce' },
+    { threshold: 50, titleEn: 'Getting Serious', titleSr: 'Izgleda si ozbiljan?' },
+    { threshold: 100, titleEn: 'Hundred', titleSr: 'Stotinu' },
+    { threshold: 200, titleEn: 'Hundred & Hundred', titleSr: 'Stotinu i stotinu' },
+    { threshold: 300, titleEn: 'Hundred & Hundreds', titleSr: 'Stotinu i stotine' },
+    { threshold: 400, titleEn: 'Hundreds & Hundreds', titleSr: 'Stotine i stotine' },
+    { threshold: 500, titleEn: 'Half a Thousand', titleSr: 'Pola hiljade' },
+    { threshold: 1000, titleEn: 'Thousand', titleSr: 'Hiljadu' },
+    { threshold: 2000, titleEn: 'Thousand & Thousand', titleSr: 'Hiljadu i hiljadu' },
+    { threshold: 3000, titleEn: 'Thousand & Thousands', titleSr: 'Hiljadu i hiljade' },
+    { threshold: 4000, titleEn: 'THOUSANDS AND THOUSANDS', titleSr: 'HILJADE I HILJADE' }
+];
+
+const belts = [
+    { limit: 24, color: 'belt-white', nameEn: 'White Belt', nameSr: 'Bijeli pojas' },
+    { limit: 100, color: 'belt-yellow', nameEn: 'Yellow Belt', nameSr: 'Žuti pojas' },
+    { limit: 400, color: 'belt-orange', nameEn: 'Orange Belt', nameSr: 'Narandžasti pojas' },
+    { limit: 1000, color: 'belt-blue', nameEn: 'Blue Belt', nameSr: 'Plavi pojas' },
+    { limit: 2000, color: 'belt-red', nameEn: 'Red Belt', nameSr: 'Crveni pojas' },
+    { limit: 4000, color: 'belt-brown', nameEn: 'Brown Belt', nameSr: 'Smeđi pojas' },
+    { limit: Infinity, color: 'belt-black', nameEn: 'Black Belt', nameSr: 'Crni pojas' }
+];
+
+let state = {
+    lang: 'en',
+    seenIntro: false,
+    data: {} 
+};
+
+// --- LOGIC ---
+
+function init() {
+    const saved = localStorage.getItem('thousandsApp');
+    if (saved) {
+        state = JSON.parse(saved);
+        // Migration support for older saves
+        if (state.seenIntro === undefined) state.seenIntro = true; 
+    }
+    
+    // Ensure all exercises exist in state
+    exercisesDef.forEach(ex => {
+        if (!state.data[ex.id]) {
+            state.data[ex.id] = { total: 0, history: {} };
+        }
+    });
+
+    renderMain();
+    
+    // Show intro only if new user
+    if (!saved || !state.seenIntro) {
+        showInfo();
+        state.seenIntro = true;
+        saveData();
+    }
+}
+
+function saveData() {
+    localStorage.setItem('thousandsApp', JSON.stringify(state));
+}
+
+function toggleLanguage() {
+    state.lang = state.lang === 'en' ? 'sr' : 'en';
+    renderMain();
+    saveData();
+}
+
+function getTodayStr() {
+    return new Date().toISOString().split('T')[0];
+}
+
+function getMilestoneTitle(count) {
+    let title = state.lang === 'en' ? 'Beginner' : 'Početnik';
+    for (let m of milestones) {
+        if (count >= m.threshold) title = state.lang === 'en' ? m.titleEn : m.titleSr;
+    }
+    return title;
+}
+
+function getBelt(count) {
+    if (count >= 4000) {
+        const dans = Math.floor((count - 4000) / 1000) + 1;
+        const base = state.lang === 'en' ? 'Black Belt' : 'Crni pojas';
+        return { color: 'belt-black', name: `${base} ${dans}. Dan` };
+    }
+    for (let b of belts) {
+        if (count < b.limit) return { color: b.color, name: state.lang === 'en' ? b.nameEn : b.nameSr };
+    }
+    return belts[0];
+}
+
+function getNextGoal(count) {
+    if (count < 4000) {
+        for (let m of milestones) {
+            if (m.threshold > count) return m.threshold;
+        }
+        return 4000;
+    } else {
+        // After 4000, goal is next thousand
+        return (Math.floor(count / 1000) + 1) * 1000;
+    }
+}
+
+function addReps(id, amount, isSubtraction = false) {
+    if (!amount || amount <= 0) return;
+    
+    // Check if distance conversion needed
+    let finalAmount = parseInt(amount);
+    const unitSelect = document.getElementById(`unit-${id}`);
+    
+    if (unitSelect) {
+        const unit = unitSelect.value;
+        const val = parseFloat(amount);
+        if (unit === 'km') finalAmount = Math.round((val * 1000) / 185);
+        else if (unit === 'mi') finalAmount = Math.round((val * 1609.34) / 185);
+        else if (unit === 'm') finalAmount = Math.round(val / 185);
+        else finalAmount = parseInt(amount); 
+    }
+
+    if (isSubtraction) finalAmount = -finalAmount;
+
+    const today = getTodayStr();
+    const exData = state.data[id];
+    
+    const prevTotal = exData.total;
+    const prevBelt = getBelt(prevTotal).name;
+    const prevTitle = getMilestoneTitle(prevTotal);
+
+    exData.total += finalAmount;
+    if (exData.total < 0) exData.total = 0;
+
+    if (!exData.history[today]) exData.history[today] = 0;
+    exData.history[today] += finalAmount;
+    if (exData.history[today] < 0) exData.history[today] = 0;
+
+    saveData();
+    renderMain(); 
+
+    if (!isSubtraction && finalAmount > 0) {
+        const newTotal = exData.total;
+        const newBelt = getBelt(newTotal).name;
+        const newTitle = getMilestoneTitle(newTotal);
+
+        let msg = "";
+        let title = "";
+        
+        if (prevTotal < 4000 && newTotal >= 4000) {
+            title = "ULTIMATE GOAL REACHED!";
+            msg = state.lang === 'en' 
+                ? "You have officially done THOUSANDS AND THOUSANDS! You can now print your certificate." 
+                : "Zvanično ste uradili HILJADE I HILJADE! Sada možete odštampati sertifikat.";
+            showModal(title, msg);
+        }
+        else if (prevBelt !== newBelt) {
+            title = state.lang === 'en' ? "New Belt Earned!" : "Novi pojas osvojen!";
+            msg = `${newBelt}`;
+            showModal(title, msg);
+        }
+        else if (prevTitle !== newTitle) {
+            title = state.lang === 'en' ? "New Milestone!" : "Nova prekretnica!";
+            msg = `"${newTitle}"`;
+            showModal(title, msg);
+        }
+    }
+}
+
+function showModal(title, body) {
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-body').innerText = body;
+    document.getElementById('msg-modal').style.display = 'flex';
+}
+
+function showInfo() {
+    const isEn = state.lang === 'en';
+    const title = document.getElementById('info-title');
+    const body = document.getElementById('info-body');
+    const warn = document.getElementById('info-warning');
+
+    title.innerText = isEn ? "The Philosophy of 4000" : "Filozofija broja 4000";
+    
+    body.innerHTML = isEn 
+        ? `<h3>Why 4000?</h3>
+           <p>To honestly claim you've done "Thousands and Thousands" of reps, you need math on your side:</p>
+           <ul>
+             <li><strong>Thousands (plural):</strong> Minimum 2000.</li>
+             <li><strong>AND Thousands (plural):</strong> Another 2000.</li>
+             <li><strong>Total:</strong> 4000 reps is the linguistic minimum for ultimate bragging rights.</li>
+           </ul>
+           <h3>The Game</h3>
+           <p>Unlock linguistic titles and colored belts as you progress. Once you hit 4000, you get the Black Belt and a printable certificate.</p>`
+        : `<h3>Zašto 4000?</h3>
+           <p>Da biste iskreno mogli da tvrdite da ste uradili "Hiljade i hiljade" ponavljanja, matematika mora biti jasna:</p>
+           <ul>
+             <li><strong>Hiljade (množina):</strong> Minimum 2000.</li>
+             <li><strong>I Hiljade (množina):</strong> Još 2000.</li>
+             <li><strong>Ukupno:</strong> 4000 je lingvistički minimum za pravo na hvalisanje.</li>
+           </ul>
+           <h3>Igra</h3>
+           <p>Otključavajte lingvističke titule i pojaseve kako napredujete. Kada stignete do 4000, dobijate Crni pojas i zvanični sertifikat.</p>`;
+
+    warn.innerHTML = isEn
+        ? "<strong>⚠️ IMPORTANT:</strong> Data is saved on this device only (Local Storage). Use the same phone/computer every day to track your progress."
+        : "<strong>⚠️ VAŽNO:</strong> Podaci se čuvaju samo na ovom uređaju (Local Storage). Koristite isti telefon ili kompjuter svaki dan da biste pratili napredak.";
+
+    document.getElementById('info-modal').style.display = 'flex';
+}
+
+function closeInfo() {
+    document.getElementById('info-modal').style.display = 'none';
+}
+
+// --- RENDERING ---
+
+function renderMain() {
+    const list = document.getElementById('exercises-list');
+    list.innerHTML = '';
+    
+    // Update headers
+    document.getElementById('app-title').innerText = state.lang === 'en' ? 'Thousands & Thousands' : 'Hiljade i Hiljade';
+    document.getElementById('app-subtitle').innerText = state.lang === 'en' ? 'The linguistic path to fitness' : 'Lingvistički put do forme';
+
+    exercisesDef.forEach(ex => {
+        const data = state.data[ex.id];
+        const count = data.total;
+        const belt = getBelt(count);
+        const title = getMilestoneTitle(count);
+        const next = getNextGoal(count);
+        
+        let globalPct = (count / 4000) * 100;
+        if (globalPct > 100 && count < 4000) globalPct = 100; // Cap visual if logic fails
+        
+        // Bar logic
+        let barPct = 0;
+        if (count < 4000) {
+            barPct = (count / 4000) * 100;
+        } else {
+            let currentBase = Math.floor(count / 1000) * 1000;
+            barPct = ((count - currentBase) / 1000) * 100;
+            if (count === currentBase) barPct = 100;
+        }
+
+        const name = state.lang === 'en' ? ex.nameEn : ex.nameSr;
+        const desc = state.lang === 'en' ? ex.descEn : ex.descSr;
+        const lblTotal = state.lang === 'en' ? 'Total' : 'Ukupno';
+        const lblNext = state.lang === 'en' ? 'Next Level' : 'Sledeći nivo';
+        const questLabel = count < 4000 
+            ? (state.lang === 'en' ? 'Main Quest' : 'Glavni Cilj') 
+            : (state.lang === 'en' ? 'Black Belt Progress' : 'Napredak crnog pojasa');
+        
+        let inputExtra = '';
+        if (ex.isDistance) {
+            inputExtra = `
+            <select id="unit-${ex.id}">
+                <option value="st">Stadija</option>
+                <option value="km">km</option>
+                <option value="m">m</option>
+                <option value="mi">milja</option>
+            </select>`;
+        }
+
+        const html = `
+        <div class="exercise-card">
+            <div class="exercise-header">
+                <div class="exercise-title">${name}</div>
+                <button class="btn-stats" onclick="openStats('${ex.id}')">📊</button>
+            </div>
+            <div class="exercise-desc">${desc}</div>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">${lblTotal}</span>
+                    <strong>${count}</strong>
+                </div>
+                <div class="stat-item" style="text-align: right;">
+                    <span class="stat-label">${lblNext}</span>
+                    <strong style="color: var(--accent);">${next}</strong>
+                </div>
+                <div class="stat-item" style="grid-column: span 2; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #eee; margin-top: 5px; padding-top: 5px;">
+                     <span style="font-size: 0.8rem;">${title}</span>
+                     <div class="belt-display ${belt.color}" style="margin:0; width: 120px; font-size: 0.7rem; height: 20px;">${belt.name}</div>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" style="width: ${barPct}%"></div>
+            </div>
+            <div class="quest-text">
+                ${questLabel}: ${count} / ${count < 4000 ? '4000' : getNextGoal(count)} 
+                (${count < 4000 ? globalPct.toFixed(1) + '%' : barPct.toFixed(1) + '%'})
+            </div>
+
+            <div class="input-group">
+                <input type="number" id="in-${ex.id}" placeholder="0" inputmode="numeric">
+                ${inputExtra}
+                <button class="btn-add" onclick="addReps('${ex.id}', document.getElementById('in-${ex.id}').value)">ADD</button>
+                <button class="btn-sub" onclick="addReps('${ex.id}', document.getElementById('in-${ex.id}').value, true)">−</button>
+            </div>
+        </div>
+        `;
+        list.innerHTML += html;
+    });
+}
+
+// --- STATS VIEW & CHARTS ---
+
+function openStats(id) {
+    const ex = exercisesDef.find(e => e.id === id);
+    const data = state.data[id];
+    
+    document.getElementById('stats-view').style.display = 'block';
+    document.getElementById('stats-title-exercise').innerText = state.lang === 'en' ? ex.nameEn : ex.nameSr;
+    document.getElementById('btn-back-txt').innerText = state.lang === 'en' ? 'Back' : 'Nazad';
+    
+    document.getElementById('chart-daily-title').innerText = state.lang === 'en' ? 'Daily History' : 'Dnevna Istorija';
+    document.getElementById('chart-cumulative-title').innerText = state.lang === 'en' ? 'Cumulative Growth' : 'Kumulativni rast';
+    
+    const goalTitle = state.lang === 'en' ? 'Quest Progress (4000)' : 'Napredak Glavnog Cilja (4000)';
+    document.getElementById('chart-goal-title').innerText = goalTitle;
+
+    // Certificate Button
+    const btnContainer = document.getElementById('cert-btn-container');
+    btnContainer.innerHTML = '';
+    if (data.total >= 4000) {
+        const btnText = state.lang === 'en' ? 'View Certificate' : 'Pogledaj Sertifikat';
+        btnContainer.innerHTML = `<button class="btn-add" style="font-size: 1.2rem; padding: 15px;" onclick="openCertificate('${id}')">🎓 ${btnText}</button>`;
+    }
+
+    // Prepare data for charts
+    const dates = Object.keys(data.history).sort();
+    const dailyVals = dates.map(d => data.history[d]);
+    
+    let cumSum = 0;
+    const cumVals = dates.map(d => {
+        cumSum += data.history[d];
+        return cumSum;
+    });
+
+    drawChart('dailyChart', dates, dailyVals, 'bar');
+    drawChart('cumulativeChart', dates, cumVals, 'line');
+
+    // Pie Chart Logic
+    let pct = (data.total / 4000) * 100;
+    let detailText = `${data.total} / 4000`;
+    
+    if (data.total >= 4000) {
+        const base = Math.floor(data.total / 1000) * 1000;
+        pct = ((data.total - base) / 1000) * 100;
+        if(data.total % 1000 === 0 && data.total > 0) pct = 100;
+        detailText = `Black Belt Progress: ${data.total}`;
+    }
+    
+    const pie = document.getElementById('big-pie');
+    pie.style.background = `conic-gradient(var(--success) ${pct}%, #eee ${pct}% 100%)`;
+    document.getElementById('pie-text').innerText = pct.toFixed(1) + '%';
+    document.getElementById('stats-quest-detail').innerText = detailText;
+}
+
+function closeStats() {
+    document.getElementById('stats-view').style.display = 'none';
+}
+
+function openCertificate(id) {
+    const ex = exercisesDef.find(e => e.id === id);
+    const exName = state.lang === 'en' ? ex.nameEn.toUpperCase() : ex.nameSr.toUpperCase();
+    
+    document.getElementById('stats-view').style.display = 'none';
+    document.getElementById('certificate-view').style.display = 'block';
+    
+    document.getElementById('cert-exercise').innerText = state.lang === 'en' ? `OF ${exName}` : `DISCIPLINA: ${exName}`;
+    document.getElementById('cert-date').innerText = (state.lang === 'en' ? 'Date: ' : 'Datum: ') + getTodayStr();
+    
+    if (state.lang === 'sr') {
+        document.getElementById('cert-text-1').innerText = "Ovim se zvanično potvrđuje da je";
+        document.getElementById('cert-text-2').innerText = "stekao zakonsko pravo da tvrdi da je uradio";
+        document.querySelector('.cert-signature').innerText = "Velemajstor Ponavljanja";
+        document.querySelector('.cert-title').innerText = "SERTIFIKAT";
+        document.querySelector('.cert-highlight').innerText = "HILJADE I HILJADE";
+    } else {
+        document.getElementById('cert-text-1').innerText = "This officially certifies that";
+        document.getElementById('cert-text-2').innerText = "has rightfully earned the claim of having done";
+        document.querySelector('.cert-signature').innerText = "Grandmaster of Repetition";
+        document.querySelector('.cert-title').innerText = "CERTIFICATE";
+        document.querySelector('.cert-highlight').innerText = "THOUSANDS AND THOUSANDS";
+    }
+}
+
+function drawChart(canvasId, labels, data, type) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width = canvas.offsetWidth;
+    const height = canvas.height = canvas.offsetHeight;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    if (data.length === 0) {
+        ctx.fillStyle = "#999";
+        ctx.textAlign = "center";
+        ctx.fillText("No data yet", width/2, height/2);
+        return;
+    }
+
+    const padding = 30;
+    const chartW = width - padding * 2;
+    const chartH = height - padding * 2;
+    const maxVal = Math.max(...data) || 1;
+    
+    ctx.strokeStyle = '#eee';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, height - padding);
+    ctx.lineTo(width - padding, height - padding);
+    ctx.stroke();
+
+    if (type === 'bar') {
+        const barW = (chartW / data.length) * 0.8;
+        const gap = (chartW / data.length) * 0.2;
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--belt-blue').trim();
+        data.forEach((val, i) => {
+            const h = (val / maxVal) * chartH;
+            const x = padding + (i * (barW + gap)) + gap/2;
+            const y = height - padding - h;
+            ctx.fillRect(x, y, barW, h);
+        });
+    } else if (type === 'line') {
+        ctx.beginPath();
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--success').trim();
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        data.forEach((val, i) => {
+            const x = padding + (i * (chartW / (data.length - 1 || 1)));
+            const y = height - padding - ((val / maxVal) * chartH);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+    }
+}
+
+// Start
+init();
+
+</script>
+</body>
+</html>
