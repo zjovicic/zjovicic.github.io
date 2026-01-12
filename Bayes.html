@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bayes' Theorem Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00d9ff;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .formula-display {
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .formula {
+            font-size: 1.4rem;
+            color: #00d9ff;
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 5px;
+        }
+
+        .fraction .top {
+            border-bottom: 2px solid #00d9ff;
+            padding: 0 10px 5px;
+        }
+
+        .fraction .bottom {
+            padding: 5px 10px 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            color: #00d9ff;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 .step-number {
+            background: #00d9ff;
+            color: #1a1a2e;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 0.95rem;
+        }
+
+        .input-group label span.math {
+            color: #ff9f43;
+            font-weight: bold;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+        }
+
+        input[type="number"]::placeholder {
+            color: #666;
+        }
+
+        .percent-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .helper-text {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .calculation-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .calc-row:last-child {
+            border-bottom: none;
+        }
+
+        .calc-row.total {
+            border-top: 2px solid #00d9ff;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-weight: bold;
+            color: #00d9ff;
+        }
+
+        .calc-label {
+            color: #aaa;
+        }
+
+        .calc-value {
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.2) 0%, rgba(0, 100, 255, 0.2) 100%);
+            border: 2px solid #00d9ff;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 1.1rem;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00d9ff;
+            text-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        }
+
+        .result-formula {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.95rem;
+            color: #888;
+        }
+
+        .error {
+            color: #ff6b6b;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .warning {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            color: #ff6b6b;
+            font-size: 0.9rem;
+        }
+
+        .info-box {
+            background: rgba(255, 159, 67, 0.1);
+            border: 1px solid rgba(255, 159, 67, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #ff9f43;
+        }
+
+        @media (max-width: 500px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .formula {
+                font-size: 1.1rem;
+            }
+            
+            .result-value {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bayes' Theorem Calculator</h1>
+        <p class="subtitle">Calculate P(A|B) step by step</p>
+
+        <div class="formula-display">
+            <div class="formula">
+                P(A|B) = 
+                <span class="fraction">
+                    <span class="top">P(B|A) × P(A)</span>
+                    <span class="bottom">P(B)</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Step 1: Prior Probability -->
+        <div class="card">
+            <h2><span class="step-number">1</span> Prior Probability</h2>
+            <div class="input-group">
+                <label>
+                    <span class="math">P(A)</span> — Probability that A is true (before considering B)
+                </label>
+                <div class="input-row">
+                    <input type="number" id="pA" min="0" max="100" step="0.1" placeholder="e.g., 1">
+                    <span class="percent-label">%</span>
+                </div>
+                <p class="helper-text">Example: What's the base rate of having a disease?</p>
+            </div>
+        </div>
+
+        <!-- Step 2: Likelihoods -->
+        <div class="card">
+            <h2><span class="step-number">2</span> Likelihoods</h2>
+            
+            <div class="input-group">
+                <label>
+                    <span class="math">P(B|A)</span> — Probability of B, given A is true
+                </label>
+                <div class="input-row">
+                    <input type="number" id="pBA" min="0" max="100" step="0.1" placeholder="e.g., 90">
+                    <span class="percent-label">%</span>
+                </div>
+                <p class="helper-text">Example: Probability of positive test if you have the disease</p>
+            </div>
+
+            <div class="input-group">
+                <label>
+                    <span class="math">P(B|¬A)</span> — Probability of B, given A is false
+                </label>
+                <div class="input-row">
+                    <input type="number" id="pBNotA" min="0" max="100" step="0.1" placeholder="e.g., 5">
+                    <span class="percent-label">%</span>
+                </div>
+                <p class="helper-text">Example: Probability of positive test if you don't have the disease (false positive rate)</p>
+            </div>
+        </div>
+
+        <!-- Step 3: Calculate P(B) -->
+        <div class="card">
+            <h2><span class="step-number">3</span> Calculate P(B) — Total Probability</h2>
+            
+            <div class="info-box">
+                P(B) = P(B|A) × P(A) + P(B|¬A) × P(¬A)
+            </div>
+
+            <div class="calculation-box">
+                <div class="calc-row">
+                    <span class="calc-label">P(¬A) = 1 - P(A)</span>
+                    <span class="calc-value" id="pNotA">—</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">P(B|A) × P(A)</span>
+                    <span class="calc-value" id="termA">—</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">P(B|¬A) × P(¬A)</span>
+                    <span class="calc-value" id="termNotA">—</span>
+                </div>
+                <div class="calc-row total">
+                    <span class="calc-label">P(B) =</span>
+                    <span class="calc-value" id="pB">—</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Final Result -->
+        <div class="card">
+            <h2><span class="step-number">4</span> Apply Bayes' Theorem</h2>
+            
+            <div class="result-box">
+                <div class="result-label">P(A|B) — Probability of A given B</div>
+                <div class="result-value" id="result">—</div>
+                <div class="result-formula" id="resultFormula"></div>
+            </div>
+            
+            <div id="warningBox" class="warning" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get all input elements
+        const pAInput = document.getElementById('pA');
+        const pBAInput = document.getElementById('pBA');
+        const pBNotAInput = document.getElementById('pBNotA');
+
+        // Get all output elements
+        const pNotAOutput = document.getElementById('pNotA');
+        const termAOutput = document.getElementById('termA');
+        const termNotAOutput = document.getElementById('termNotA');
+        const pBOutput = document.getElementById('pB');
+        const resultOutput = document.getElementById('result');
+        const resultFormula = document.getElementById('resultFormula');
+        const warningBox = document.getElementById('warningBox');
+
+        // Format number for display
+        function formatPercent(value) {
+            if (isNaN(value)) return '—';
+            return (value * 100).toFixed(4).replace(/\.?0+$/, '') + '%';
+        }
+
+        function formatDecimal(value) {
+            if (isNaN(value)) return '—';
+            return value.toFixed(6).replace(/\.?0+$/, '');
+        }
+
+        // Main calculation function
+        function calculate() {
+            // Get input values (convert from percentage to decimal)
+            const pA = parseFloat(pAInput.value) / 100;
+            const pBA = parseFloat(pBAInput.value) / 100;
+            const pBNotA = parseFloat(pBNotAInput.value) / 100;
+
+            // Reset warning
+            warningBox.style.display = 'none';
+
+            // Check if all inputs are valid
+            if (isNaN(pA) || isNaN(pBA) || isNaN(pBNotA)) {
+                pNotAOutput.textContent = isNaN(pA) ? '—' : formatPercent(1 - pA);
+                termAOutput.textContent = '—';
+                termNotAOutput.textContent = '—';
+                pBOutput.textContent = '—';
+                resultOutput.textContent = '—';
+                resultFormula.textContent = '';
+                return;
+            }
+
+            // Validate ranges
+            let warnings = [];
+            if (pA < 0 || pA > 1) warnings.push('P(A) must be between 0% and 100%');
+            if (pBA < 0 || pBA > 1) warnings.push('P(B|A) must be between 0% and 100%');
+            if (pBNotA < 0 || pBNotA > 1) warnings.push('P(B|¬A) must be between 0% and 100%');
+
+            if (warnings.length > 0) {
+                warningBox.textContent = warnings.join('. ');
+                warningBox.style.display = 'block';
+                return;
+            }
+
+            // Calculate P(¬A)
+            const pNotA = 1 - pA;
+            pNotAOutput.textContent = formatPercent(pNotA);
+
+            // Calculate the two terms for P(B)
+            const termA = pBA * pA;
+            const termNotA = pBNotA * pNotA;
+            termAOutput.textContent = formatPercent(termA);
+            termNotAOutput.textContent = formatPercent(termNotA);
+
+            // Calculate P(B)
+            const pB = termA + termNotA;
+            pBOutput.textContent = formatPercent(pB);
+
+            // Calculate P(A|B) using Bayes' theorem
+            if (pB === 0) {
+                resultOutput.textContent = 'Undefined';
+                warningBox.textContent = 'P(B) is 0, so P(A|B) is undefined (division by zero).';
+                warningBox.style.display = 'block';
+                resultFormula.textContent = '';
+                return;
+            }
+
+            const pAB = (pBA * pA) / pB;
+            resultOutput.textContent = formatPercent(pAB);
+
+            // Show the calculation
+            resultFormula.innerHTML = `
+                P(A|B) = (${formatPercent(pBA)} × ${formatPercent(pA)}) / ${formatPercent(pB)}<br>
+                P(A|B) = ${formatPercent(termA)} / ${formatPercent(pB)}<br>
+                P(A|B) = <strong>${formatPercent(pAB)}</strong>
+            `;
+        }
+
+        // Add event listeners to all inputs
+        pAInput.addEventListener('input', calculate);
+        pBAInput.addEventListener('input', calculate);
+        pBNotAInput.addEventListener('input', calculate);
+
+        // Initial calculation
+        calculate();
+    </script>
+</body>
+</html>
