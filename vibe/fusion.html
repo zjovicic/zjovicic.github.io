@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commercial Fusion Countdown</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        body {
+            background-color: #0d0d0d;
+            color: #00ff41; /* Sci-fi Green */
+            font-family: 'Share Tech Mono', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .timer-container {
+            display: flex;
+            gap: 20px;
+            padding: 30px;
+            border: 2px solid #333;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .number {
+            font-size: 4rem;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .label {
+            font-size: 1rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Make the milliseconds flutter slightly differently */
+        #ms {
+            color: #fff;
+            min-width: 100px;
+        }
+        
+        .separator {
+            font-size: 3rem;
+            margin-top: 10px;
+            opacity: 0.5;
+        }
+
+        .footer {
+            margin-top: 50px;
+            color: #444;
+            font-size: 0.9rem;
+        }
+
+        /* Mobile adjustment */
+        @media (max-width: 768px) {
+            .timer-container {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            h1 { font-size: 1.5rem; }
+            .number { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Time left till commercial fusion power</h1>
+
+    <div class="timer-container">
+        <div class="time-unit">
+            <span class="number" id="years">30</span>
+            <span class="label">YEARS</span>
+        </div>
+        <div class="separator">:</div>
+        
+        <div class="time-unit">
+            <span class="number" id="months">00</span>
+            <span class="label">MONTHS</span>
+        </div>
+        <div class="separator">:</div>
+
+        <div class="time-unit">
+            <span class="number" id="days">00</span>
+            <span class="label">DAYS</span>
+        </div>
+        <div class="separator">:</div>
+
+        <div class="time-unit">
+            <span class="number" id="seconds">10</span>
+            <span class="label">SECONDS</span>
+        </div>
+        <div class="separator">.</div>
+
+        <div class="time-unit">
+            <span class="number" id="ms">000</span>
+            <span class="label">MS</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        Estimating... please wait.
+    </div>
+
+    <script>
+        // Configuration
+        const LOOP_START_SECONDS = 10;
+        const LOOP_END_SECONDS = 1;
+        
+        // State variables
+        let currentSeconds = LOOP_START_SECONDS;
+        let currentMs = 0;
+        
+        // Timestamp for delta calculation
+        let lastTime = performance.now();
+
+        // Elements
+        const elSeconds = document.getElementById('seconds');
+        const elMs = document.getElementById('ms');
+
+        function updateTimer(currentTime) {
+            // Calculate time passed since last frame (delta time)
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            // Subtract delta from our milliseconds
+            currentMs -= deltaTime;
+
+            // Handle millisecond underflow (e.g. going from 0ms to -16ms)
+            if (currentMs < 0) {
+                currentMs += 1000;
+                currentSeconds -= 1;
+            }
+
+            // THE JOKE LOGIC:
+            // The prompt asks to loop when we reach 30y 0m 0d 1s.
+            // Since Years/Months/Days are static in HTML, we only check seconds.
+            // If we drop below 1 second (meaning we are technically at 0s and some ms), we reset.
+            if (currentSeconds < LOOP_END_SECONDS) {
+                // Add 9 seconds to loop back to 10
+                currentSeconds += 9; 
+            }
+
+            // Render
+            // Pad seconds with leading zero if needed (though 10 doesn't need it, 09 would)
+            elSeconds.textContent = currentSeconds.toString().padStart(2, '0');
+            
+            // Format MS to be 3 digits
+            elMs.textContent = Math.floor(currentMs).toString().padStart(3, '0');
+
+            // Request next frame
+            requestAnimationFrame(updateTimer);
+        }
+
+        // Start the loop
+        requestAnimationFrame(updateTimer);
+
+    </script>
+</body>
+</html>
