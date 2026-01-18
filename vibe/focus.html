@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Focus Sessions — Attention Trainer</title>
+<style>
+  :root {
+    --bg: #0f1220;
+    --panel: #171a2b;
+    --panel-2: #1d2240;
+    --text: #e6e8f1;
+    --muted: #a8aec6;
+    --accent: #7c9cff;
+    --accent-2: #4fd1c5;
+    --warn: #ffbe5c;
+    --danger: #ff6b6b;
+
+    /* High-contrast form controls */
+    --select-bg: #ffffff;
+    --select-fg: #000000;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg, #0f1220, #121532);
+    color: var(--text);
+  }
+  header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(0,0,0,0.2);
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(6px);
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
+  .sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 18px; }
+  nav {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+  }
+  nav button {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--panel);
+    color: var(--text);
+    padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  }
+  nav button.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(124,156,255,0.15) inset; }
+  section { display: none; }
+  section.active { display: block; }
+  .card {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; }
+  .col-12 { grid-column: span 12; }
+  .col-6 { grid-column: span 6; }
+  .col-4 { grid-column: span 4; }
+  .col-3 { grid-column: span 3; }
+  .col-2 { grid-column: span 2; }
+  @media (max-width: 800px){
+    .col-6, .col-4, .col-3, .col-2 { grid-column: span 12; }
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  input[type="text"], input[type="number"], input[type="date"], textarea, input[type="url"] {
+    width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03); color: var(--text); outline: none;
+  }
+
+  /* High-contrast selects and their options */
+  select {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background-color: var(--select-bg) !important;
+    color: var(--select-fg) !important;
+    outline: none;
+  }
+  option {
+    background-color: var(--select-bg) !important;
+    color: var(--select-fg) !important;
+  }
+
+  textarea { min-height: 100px; resize: vertical; }
+  .btn {
+    background: var(--accent); color: #0b0f2a; font-weight: 700; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer;
+  }
+  .btn.secondary { background: rgba(255,255,255,0.07); color: var(--text); }
+  .btn.warn { background: var(--warn); color: #1a1000; }
+  .btn.danger { background: var(--danger); color: #220000; }
+  .btn.outline { background: transparent; border: 1px solid rgba(255,255,255,0.16); color: var(--text); }
+  .btn.small { padding: 6px 10px; font-size: 12px; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .timer-display {
+    font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 42px; letter-spacing: 2px; padding: 8px 0;
+  }
+  .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1); color: var(--muted); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .muted { color: var(--muted); }
+  .grid { display: grid; gap: 12px; }
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpi .card { text-align: center; }
+  .kpi .big { font-size: 24px; font-weight: 800; }
+  .tag { background: rgba(79, 209, 197, 0.15); color: var(--accent-2); border: 1px solid rgba(79, 209, 197, 0.35); padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+  .flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .right { margin-left: auto; }
+  .small { font-size: 12px; }
+  .spacer { height: 8px; }
+  .center { text-align: center; }
+  .mini-only { display: none; }
+  body.mini .mini-hide { display: none !important; }
+  body.mini .mini-only { display: block !important; }
+
+  /* Session editor simplified layout */
+  #tab-session-editor .row { grid-template-columns: repeat(12, 1fr); }
+</style>
+</head>
+<body>
+  <header class="mini-hide">
+    <h1>Focus Sessions — Attention Trainer</h1>
+    <div class="sub">Timer. Summaries. Points. Progression. All stored locally in your browser.</div>
+  </header>
+
+  <div class="container">
+    <div class="mini-only">
+      <div class="card center">
+        <div class="muted">Mini Timer</div>
+        <div id="mini_timer" class="timer-display">00:00</div>
+        <div class="flex center" style="justify-content:center;">
+          <button id="mini_pause" class="btn secondary">Pause</button>
+          <button id="mini_resume" class="btn secondary" disabled>Resume</button>
+          <button id="mini_close" class="btn outline">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <nav class="mini-hide">
+      <button class="tab-btn active" data-tab="tab-focus">Focus</button>
+      <button class="tab-btn" data-tab="tab-log">Log</button>
+      <button class="tab-btn" data-tab="tab-search">Search</button>
+      <button class="tab-btn" data-tab="tab-stats">Stats & Levels</button>
+      <button class="tab-btn" data-tab="tab-data">Data & Backup</button>
+    </nav>
+
+    <!-- Focus / Timer -->
+    <section id="tab-focus" class="active mini-hide">
+      <div class="card">
+        <div class="row">
+          <div class="col-12"><h3 style="margin:0 0 6px;">New Session</h3></div>
+
+          <div class="col-6">
+            <label>Title of content</label>
+            <input id="f_title" type="text" placeholder="e.g., The Godfather, Episode 142, 'On Attention Spans'"/>
+          </div>
+          <div class="col-3">
+            <label>Type</label>
+            <select id="f_type">
+              <option value="">—</option>
+              <option>Movie</option>
+              <option>Podcast</option>
+              <option>Video (YouTube)</option>
+              <option>Video Essay</option>
+              <option>Blog Post</option>
+              <option>Article</option>
+              <option>Book</option>
+              <option>Short Story</option>
+              <option>Vlog</option>
+              <option>Music (Instrumental)</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-3">
+            <label>Intended duration (minutes)</label>
+            <input id="f_minutes" type="number" min="1" step="1" placeholder="e.g., 20" />
+          </div>
+
+          <div class="col-6">
+            <label>Source (channel, blog, collection, book title, etc.)</label>
+            <input id="f_source" type="text" placeholder="e.g., The New Yorker, Veritasium, Penguin Classics"/>
+          </div>
+          <div class="col-3">
+            <label>Source type</label>
+            <select id="f_source_type">
+              <option value="">—</option>
+              <option>YouTube Channel</option>
+              <option>Blog</option>
+              <option>Book</option>
+              <option>Magazine</option>
+              <option>Podcast Feed</option>
+              <option>Website</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-3">
+            <label>Author (optional)</label>
+            <input id="f_author" type="text" placeholder="e.g., Mario Puzo"/>
+          </div>
+
+          <div class="col-6">
+            <label>URL (optional)</label>
+            <input id="f_url" type="url" placeholder="https://..."/>
+          </div>
+          <div class="col-3">
+            <label>Genre (optional)</label>
+            <input id="f_genre" type="text" placeholder="e.g., crime, video-essay"/>
+          </div>
+          <div class="col-3">
+            <label>Main topic (optional)</label>
+            <input id="f_topic" type="text" placeholder="e.g., attention, memory"/>
+          </div>
+
+          <div class="col-3">
+            <label>Language (optional)</label>
+            <input id="f_language" type="text" placeholder="e.g., English"/>
+          </div>
+          <div class="col-3">
+            <label>Year (optional)</label>
+            <input id="f_year" type="number" min="1" step="1"/>
+          </div>
+          <div class="col-3">
+            <label>Country (optional)</label>
+            <input id="f_country" type="text" placeholder="e.g., US, UK, IT"/>
+          </div>
+          <div class="col-3">
+            <label>Date</label>
+            <input id="f_date" type="date"/>
+          </div>
+
+          <div class="col-12 flex">
+            <button id="btn_start" class="btn">Start timer</button>
+            <button id="btn_pause" class="btn secondary" disabled>Pause</button>
+            <button id="btn_resume" class="btn secondary" disabled>Resume</button>
+            <button id="btn_cancel" class="btn outline" disabled>Cancel</button>
+            <button id="btn_popout" class="btn warn right">Pop out mini timer</button>
+          </div>
+
+          <div class="col-12">
+            <div class="timer-display" id="timer_display">00:00</div>
+          </div>
+
+          <div class="col-12" id="summary_block" style="display:none;">
+            <label>Summary</label>
+            <textarea id="f_summary" placeholder="What did you watch/read? Key points, arguments, events, concepts."></textarea>
+            <div class="spacer"></div>
+            <div class="flex">
+              <span class="pill" id="points_preview"></span>
+              <button id="btn_save_session" class="btn">Save session</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Log -->
+    <section id="tab-log" class="mini-hide">
+      <div class="card">
+        <div class="flex">
+          <h3 style="margin:0;">Session Log</h3>
+          <span class="right small muted">Click View to open editor</span>
+        </div>
+        <table id="tbl_sessions">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Source</th>
+              <th>Minutes</th>
+              <th>Points</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody_sessions"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Search -->
+    <section id="tab-search" class="mini-hide">
+      <div class="card">
+        <h3 style="margin:0 0 8px;">Search</h3>
+        <div class="row">
+          <div class="col-3">
+            <label>Date</label>
+            <input id="s_date" type="date"/>
+          </div>
+          <div class="col-3">
+            <label>Title contains</label>
+            <input id="s_title" type="text" placeholder=""/>
+          </div>
+          <div class="col-3">
+            <label>Author contains</label>
+            <input id="s_author" type="text" placeholder=""/>
+          </div>
+          <div class="col-3">
+            <label>Source contains</label>
+            <input id="s_source" type="text" placeholder=""/>
+          </div>
+          <div class="col-3">
+            <label>Type</label>
+            <select id="s_type">
+              <option value="">Any</option>
+              <option>Movie</option>
+              <option>Podcast</option>
+              <option>Video (YouTube)</option>
+              <option>Video Essay</option>
+              <option>Blog Post</option>
+              <option>Article</option>
+              <option>Book</option>
+              <option>Short Story</option>
+              <option>Vlog</option>
+              <option>Music (Instrumental)</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-12 flex">
+            <button id="btn_search" class="btn">Search</button>
+            <button id="btn_search_reset" class="btn secondary">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex">
+          <h4 style="margin:0;">Results</h4>
+          <span class="right small muted" id="search_count"></span>
+        </div>
+        <table id="tbl_search">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Author</th>
+              <th>Source</th>
+              <th>Minutes</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody id="tbody_search"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section id="tab-stats" class="mini-hide">
+      <div class="kpi">
+        <div class="card">
+          <div class="muted small">Total Sessions</div>
+          <div class="big" id="k_total_sessions">0</div>
+        </div>
+        <div class="card">
+          <div class="muted small">Total Minutes</div>
+          <div class="big" id="k_total_minutes">0</div>
+        </div>
+        <div class="card">
+          <div class="muted small">Total Points</div>
+          <div class="big" id="k_total_points">0</div>
+        </div>
+        <div class="card">
+          <div class="muted small">Level</div>
+          <div class="big"><span class="tag" id="k_level">Beginner</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 6px;">Daily Totals (last 14 days)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Sessions</th>
+              <th>Minutes</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody id="tbody_daily"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 6px;">Progression</h3>
+        <div id="progression_text" class="grid small"></div>
+      </div>
+    </section>
+
+    <!-- Data & Backup -->
+    <section id="tab-data" class="mini-hide">
+      <div class="card">
+        <div class="flex">
+          <h3 style="margin:0;">Data & Backup</h3>
+          <button id="btn_export" class="btn secondary right">Export JSON</button>
+          <label class="btn secondary" for="file_import" style="cursor:pointer;">Import JSON</label>
+          <input id="file_import" type="file" accept="application/json" style="display:none;"/>
+          <button id="btn_clear" class="btn danger">Clear All Data</button>
+        </div>
+      </div>
+      <div class="card">
+        <h4 style="margin:0 0 6px;">Contents</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th><th>Type</th><th>Author</th><th>Source</th><th>Year</th><th>Lang</th><th>ID</th>
+            </tr>
+          </thead>
+          <tbody id="tbody_contents"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h4 style="margin:0 0 6px;">Authors</h4>
+        <table>
+          <thead><tr><th>Name</th><th>ID</th></tr></thead>
+          <tbody id="tbody_authors"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h4 style="margin:0 0 6px;">Sources</h4>
+        <table>
+          <thead><tr><th>Title</th><th>Type</th><th>Year</th><th>Country</th><th>ID</th></tr></thead>
+          <tbody id="tbody_sources"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Session Editor (used when open in new window with ?editSession=ID) -->
+    <section id="tab-session-editor" class="" style="display:none;">
+      <div class="card">
+        <div class="flex">
+          <h3 style="margin:0;">Session Details</h3>
+          <button id="btn_close_editor" class="btn secondary right">Close Window</button>
+        </div>
+        <div class="row">
+          <div class="col-3">
+            <label>Date</label>
+            <input id="e_date" type="date"/>
+          </div>
+          <div class="col-3">
+            <label>Duration (minutes)</label>
+            <input id="e_minutes" type="number" min="1" step="1"/>
+          </div>
+          <div class="col-6">
+            <label>Title</label>
+            <input id="e_title" type="text"/>
+          </div>
+
+          <div class="col-3">
+            <label>Type</label>
+            <select id="e_type">
+              <option value="">—</option>
+              <option>Movie</option>
+              <option>Podcast</option>
+              <option>Video (YouTube)</option>
+              <option>Video Essay</option>
+              <option>Blog Post</option>
+              <option>Article</option>
+              <option>Book</option>
+              <option>Short Story</option>
+              <option>Vlog</option>
+              <option>Music (Instrumental)</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-3">
+            <label>Author</label>
+            <input id="e_author" type="text"/>
+          </div>
+          <div class="col-3">
+            <label>Source</label>
+            <input id="e_source" type="text"/>
+          </div>
+          <div class="col-3">
+            <label>Source type</label>
+            <select id="e_source_type">
+              <option value="">—</option>
+              <option>YouTube Channel</option>
+              <option>Blog</option>
+              <option>Book</option>
+              <option>Magazine</option>
+              <option>Podcast Feed</option>
+              <option>Website</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="col-6">
+            <label>URL</label>
+            <input id="e_url" type="url"/>
+          </div>
+          <div class="col-3">
+            <label>Genre</label>
+            <input id="e_genre" type="text"/>
+          </div>
+          <div class="col-3">
+            <label>Topic</label>
+            <input id="e_topic" type="text"/>
+          </div>
+          <div class="col-3">
+            <label>Language</label>
+            <input id="e_language" type="text"/>
+          </div>
+          <div class="col-3">
+            <label>Year</label>
+            <input id="e_year" type="number" min="1" step="1"/>
+          </div>
+          <div class="col-3">
+            <label>Country</label>
+            <input id="e_country" type="text"/>
+          </div>
+
+          <div class="col-12">
+            <label>Summary</label>
+            <textarea id="e_summary" placeholder="Edit summary"></textarea>
+          </div>
+
+          <div class="col-12 flex">
+            <button id="btn_save_edit" class="btn">Save changes</button>
+            <button id="btn_delete_session" class="btn danger">Delete session</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+<script>
+  // --- Keys ---
+  const DB_KEY = 'focusDB_v1';
+  const ACTIVE_TIMER_KEY = 'focus_active_timer';
+
+  // --- Utility ---
+  function newId(prefix) {
+    if (window.crypto && crypto.randomUUID) return prefix + '_' + crypto.randomUUID();
+    return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*1e9);
+  }
+  function norm(s){ return (s||'').trim().toLowerCase(); }
+  function byId(arr, id){ return arr.find(x => x.id === id) || null; }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  // Local date YYYY-MM-DD
+  function ymdLocal(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+  function todayStr(){ return ymdLocal(new Date()); }
+
+  // --- DB ---
+  function loadDB(){
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) {
+      try { return JSON.parse(raw); } catch(e) {}
+    }
+    const db = { authors: [], sources: [], contents: [], sessions: [], meta: { createdAt: new Date().toISOString(), version: 2 } };
+    saveDB(db); return db;
+  }
+  function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+  let DB = loadDB();
+
+  // Sync across windows
+  window.addEventListener('storage', (e)=>{
+    if (e.key === DB_KEY) { DB = loadDB(); renderAll(); }
+    if (e.key === ACTIVE_TIMER_KEY) { renderActiveTimerUI(); }
+  });
+
+  // --- Entities ---
+  function findOrCreateAuthor(name){
+    const n = norm(name);
+    if (!n) return null;
+    let it = DB.authors.find(a => norm(a.name) === n);
+    if (!it) { it = { id: newId('auth'), name: name.trim() }; DB.authors.push(it); }
+    return it;
+  }
+  function findOrCreateSource({title, type, year, country, authorId}){
+    const key = norm(title) + '|' + norm(type||'');
+    let it = DB.sources.find(s => (norm(s.title)+'|'+norm(s.type||'')) === key);
+    if (!it) {
+      it = { id: newId('src'), title: (title||'').trim(), type: type||'', year: year||null, country: country||'', authorId: authorId || null };
+      DB.sources.push(it);
+    } else {
+      if (!it.year && year) it.year = year;
+      if (!it.country && country) it.country = country;
+      if (!it.authorId && authorId) it.authorId = authorId;
+    }
+    return it;
+  }
+  function findOrCreateContent(obj){
+    const key = norm(obj.title) + '|' + (obj.sourceId || '') + '|' + (obj.authorId || '');
+    let it = DB.contents.find(c => (norm(c.title) + '|' + (c.sourceId||'') + '|' + (c.authorId||'')) === key);
+    if (!it) {
+      it = {
+        id: newId('cnt'),
+        title: (obj.title||'').trim(),
+        type: obj.type||'',
+        genre: obj.genre||'',
+        topic: obj.topic||'',
+        language: obj.language||'',
+        year: obj.year||null,
+        country: obj.country||'',
+        url: obj.url||'',
+        sourceId: obj.sourceId || null,
+        authorId: obj.authorId || null
+      };
+      DB.contents.push(it);
+    } else {
+      ['type','genre','topic','language','year','country','url'].forEach(k=>{
+        if ((!it[k] || it[k]==='') && obj[k]) it[k] = obj[k];
+      });
+    }
+    return it;
+  }
+
+  // --- Points & Levels ---
+  function computePoints(minutes){
+    const m = Number(minutes||0);
+    let mult = 1.0;
+    if (m <= 5) mult = 1.0;
+    else if (m <= 10) mult = 1.1;
+    else if (m <= 20) mult = 1.2;
+    else if (m <= 40) mult = 1.3;
+    else if (m <= 80) mult = 1.4;
+    else mult = 1.5;
+    return Math.round(m * mult);
+  }
+  function sessionsAtLeast(min){ return DB.sessions.filter(s => s.durationMin >= min).length; }
+  function currentLevel(){
+    let lvl = 'Beginner';
+    if (sessionsAtLeast(5) >= 20) lvl = 'Apprentice'; else return lvl;
+    if (sessionsAtLeast(10) >= 15) lvl = 'Intermediate'; else return lvl;
+    if (sessionsAtLeast(20) >= 15) lvl = 'Advanced'; else return lvl;
+    if (sessionsAtLeast(40) >= 15) lvl = 'Master'; else return lvl;
+    if (sessionsAtLeast(80) >= 10) lvl = 'Expert';
+    return lvl;
+  }
+
+  // --- Timer persistence (runs even if tab inactive) ---
+  function getActiveTimer(){
+    const raw = localStorage.getItem(ACTIVE_TIMER_KEY);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch(e){ return null; }
+  }
+  function setActiveTimer(t){
+    localStorage.setItem(ACTIVE_TIMER_KEY, JSON.stringify(t));
+  }
+  function clearActiveTimer(){ localStorage.removeItem(ACTIVE_TIMER_KEY); }
+
+  // Format mm:ss
+  function fmtMMSS(ms){
+    const s = Math.max(0, Math.floor(ms/1000));
+    const m = Math.floor(s/60);
+    const r = s % 60;
+    return (m<10?'0':'') + m + ':' + (r<10?'0':'') + r;
+  }
+
+  function updateRemaining(t){
+    if (!t) return 0;
+    if (t.status === 'paused') return Math.max(0, t.endTime - t.pauseRefEndTime); // store last remain
+    return Math.max(0, t.endTime - Date.now());
+  }
+
+  function renderActiveTimerUI(){
+    const t = getActiveTimer();
+    const summaryBlock = document.getElementById('summary_block');
+    const disp = document.getElementById('timer_display');
+    const btnStart = document.getElementById('btn_start');
+    const btnPause = document.getElementById('btn_pause');
+    const btnResume = document.getElementById('btn_resume');
+    const btnCancel = document.getElementById('btn_cancel');
+
+    if (!t){
+      disp && (disp.textContent = '00:00');
+      btnStart && (btnStart.disabled = false);
+      btnPause && (btnPause.disabled = true);
+      btnResume && (btnResume.disabled = true);
+      btnCancel && (btnCancel.disabled = true);
+      enableInputs(true);
+      summaryBlock && (summaryBlock.style.display = 'none');
+      // Mini window
+      const mini = document.getElementById('mini_timer');
+      if (mini) { mini.textContent = '00:00'; }
+      const mp = document.getElementById('mini_pause');
+      const mr = document.getElementById('mini_resume');
+      if (mp && mr) { mp.disabled = true; mr.disabled = true; }
+      return;
+    }
+
+    const remain = updateRemaining(t);
+    disp && (disp.textContent = fmtMMSS(remain));
+    // Mini
+    const mini = document.getElementById('mini_timer');
+    if (mini) mini.textContent = fmtMMSS(remain);
+
+    const running = t.status === 'running';
+    const paused = t.status === 'paused';
+    const completed = t.status === 'completed';
+
+    btnStart && (btnStart.disabled = running || paused || completed);
+    btnPause && (btnPause.disabled = !running);
+    btnResume && (btnResume.disabled = !paused);
+    btnCancel && (btnCancel.disabled = !(running || paused));
+
+    enableInputs(!(running || paused));
+    if (completed){
+      summaryBlock && (summaryBlock.style.display = 'block');
+      document.getElementById('points_preview').textContent = `${t.durationMin} min → ${computePoints(t.durationMin)} points`;
+    } else {
+      summaryBlock && (summaryBlock.style.display = 'none');
+    }
+
+    // Mini window controls
+    const mp = document.getElementById('mini_pause');
+    const mr = document.getElementById('mini_resume');
+    if (mp && mr) {
+      mp.disabled = !running;
+      mr.disabled = !paused;
+    }
+  }
+
+  function enableInputs(on){
+    const ids = ['f_title','f_type','f_minutes','f_source','f_source_type','f_author','f_url',
+      'f_genre','f_topic','f_language','f_year','f_country','f_date'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = !on;
+    });
+  }
+
+  let UI_TICK = null;
+  function startUITick(){
+    if (UI_TICK) clearInterval(UI_TICK);
+    UI_TICK = setInterval(()=>{
+      const t = getActiveTimer();
+      if (!t){ renderActiveTimerUI(); return; }
+
+      const remain = updateRemaining(t);
+      // Auto-complete
+      if (remain <= 0 && t.status !== 'completed'){
+        t.status = 'completed';
+        setActiveTimer(t);
+        timeUpNotify();
+      }
+      renderActiveTimerUI();
+    }, 500);
+  }
+
+  // --- Notifications / sound ---
+  function requestNotifyPermission(){
+    if ('Notification' in window && Notification.permission === 'default'){
+      Notification.requestPermission().catch(()=>{});
+    }
+  }
+  function beep(){
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 880; o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+      o.start(); o.stop(ctx.currentTime + 0.45);
+    } catch(e){}
+  }
+  function timeUpNotify(){
+    beep();
+    if ('speechSynthesis' in window) {
+      try {
+        const u = new SpeechSynthesisUtterance('Time is up. Write your summary.');
+        window.speechSynthesis.speak(u);
+      } catch(e){}
+    }
+    if ('Notification' in window && Notification.permission === 'granted'){
+      new Notification('Focus Session', { body: 'Time is up — write your summary.', silent: false });
+    }
+  }
+
+  // --- Timer controls ---
+  function startTimer(){
+    const title = document.getElementById('f_title').value.trim();
+    const mins = Number(document.getElementById('f_minutes').value || 0);
+    const date = document.getElementById('f_date').value;
+    if (!title){ alert('Please enter a content title.'); return; }
+    if (!mins || mins <= 0){ alert('Please set intended duration in minutes.'); return; }
+    if (!date){ alert('Please set a date.'); return; }
+
+    const t = {
+      status: 'running',
+      startTime: Date.now(),
+      endTime: Date.now() + mins * 60 * 1000,
+      pauseRefEndTime: null,
+      durationMin: mins,
+      fields: {
+        title,
+        type: document.getElementById('f_type').value,
+        sourceTitle: document.getElementById('f_source').value.trim(),
+        sourceType: document.getElementById('f_source_type').value,
+        authorName: document.getElementById('f_author').value.trim(),
+        url: document.getElementById('f_url').value.trim(),
+        genre: document.getElementById('f_genre').value.trim(),
+        topic: document.getElementById('f_topic').value.trim(),
+        language: document.getElementById('f_language').value.trim(),
+        year: document.getElementById('f_year').value ? Number(document.getElementById('f_year').value) : null,
+        country: document.getElementById('f_country').value.trim(),
+        date
+      }
+    };
+    setActiveTimer(t);
+    requestNotifyPermission();
+    renderActiveTimerUI();
+  }
+  function pauseTimer(){
+    const t = getActiveTimer(); if (!t || t.status!=='running') return;
+    const remain = Math.max(0, t.endTime - Date.now());
+    t.status = 'paused';
+    t.pauseRefEndTime = Date.now() + remain; // reference for UI
+    setActiveTimer(t); renderActiveTimerUI();
+  }
+  function resumeTimer(){
+    const t = getActiveTimer(); if (!t || t.status!=='paused') return;
+    const remain = Math.max(0, t.pauseRefEndTime - Date.now());
+    t.status = 'running';
+    t.endTime = Date.now() + remain;
+    t.pauseRefEndTime = null;
+    setActiveTimer(t); renderActiveTimerUI();
+  }
+  function cancelTimer(){
+    const t = getActiveTimer();
+    if (!t) return;
+    if (confirm('Cancel this timer?')){
+      clearActiveTimer();
+      renderActiveTimerUI();
+    }
+  }
+
+  function saveSession(){
+    const t = getActiveTimer();
+    if (!t || t.status !== 'completed'){ alert('No completed session to save.'); return; }
+
+    // Allow user edits before saving
+    const title = document.getElementById('f_title').value.trim() || t.fields.title;
+    const type = document.getElementById('f_type').value || t.fields.type;
+    const intendedMin = Number(document.getElementById('f_minutes').value || t.durationMin);
+
+    const sourceTitle = document.getElementById('f_source').value.trim() || t.fields.sourceTitle;
+    const sourceType  = document.getElementById('f_source_type').value || t.fields.sourceType;
+    const authorName  = document.getElementById('f_author').value.trim() || t.fields.authorName;
+
+    const url = document.getElementById('f_url').value.trim() || t.fields.url;
+    const genre = document.getElementById('f_genre').value.trim() || t.fields.genre;
+    const topic = document.getElementById('f_topic').value.trim() || t.fields.topic;
+    const language = document.getElementById('f_language').value.trim() || t.fields.language;
+    const year = document.getElementById('f_year').value ? Number(document.getElementById('f_year').value) : t.fields.year;
+    const country = document.getElementById('f_country').value.trim() || t.fields.country;
+    const date = document.getElementById('f_date').value || t.fields.date;
+    const summary = document.getElementById('f_summary').value.trim();
+
+    if (!title || !date || !intendedMin){ alert('Missing required fields.'); return; }
+
+    const author = findOrCreateAuthor(authorName);
+    const source = sourceTitle ? findOrCreateSource({title: sourceTitle, type: sourceType, year: null, country: '', authorId: author? author.id : null}) : null;
+    const content = findOrCreateContent({
+      title, type, genre, topic, language, year, country, url,
+      sourceId: source? source.id : null,
+      authorId: author? author.id : null
+    });
+
+    const minutes = intendedMin;
+    const points = computePoints(minutes);
+    const session = {
+      id: newId('ses'),
+      contentId: content.id,
+      date,
+      durationMin: minutes,
+      summary,
+      points,
+      createdAt: new Date().toISOString()
+    };
+    DB.sessions.push(session);
+    saveDB(DB);
+
+    // Reset for next session
+    clearActiveTimer();
+    document.getElementById('f_summary').value = '';
+    document.getElementById('summary_block').style.display = 'none';
+    renderAll();
+    alert('Session saved. Nice work!');
+  }
+
+  // --- Rendering tables/search/stats ---
+  function renderSessionsTable(){
+    const tbody = document.getElementById('tbody_sessions');
+    tbody.innerHTML = '';
+    const rows = [...DB.sessions].sort((a,b)=> (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    for (const s of rows){
+      const c = byId(DB.contents, s.contentId);
+      const author = c?.authorId ? byId(DB.authors, c.authorId) : null;
+      const source = c?.sourceId ? byId(DB.sources, c.sourceId) : null;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${s.date}</td>
+        <td>${c ? escapeHtml(c.title) : '—'}</td>
+        <td>${author ? escapeHtml(author.name) : '—'}</td>
+        <td>${source ? escapeHtml(source.title) : '—'}</td>
+        <td>${s.durationMin}</td>
+        <td>${s.points}</td>
+        <td>
+          <button class="btn small secondary" data-view="${s.id}">View</button>
+          <button class="btn small outline" data-del="${s.id}">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+    // Handlers
+    tbody.querySelectorAll('button[data-view]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-view');
+        const url = new URL(window.location.href);
+        url.search = '?editSession=' + encodeURIComponent(id);
+        window.open(url.toString(), 'SessionDetails', 'width=900,height=720');
+      });
+    });
+    tbody.querySelectorAll('button[data-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-del');
+        if (confirm('Delete this session?')){
+          DB.sessions = DB.sessions.filter(s => s.id !== id);
+          saveDB(DB); renderAll();
+        }
+      });
+    });
+  }
+
+  function renderSearch(){
+    document.getElementById('tbody_search').innerHTML = '';
+    document.getElementById('search_count').textContent = '';
+  }
+
+  function performSearch(){
+    const d = document.getElementById('s_date').value.trim();
+    const t = norm(document.getElementById('s_title').value);
+    const a = norm(document.getElementById('s_author').value);
+    const s = norm(document.getElementById('s_source').value);
+    const type = norm(document.getElementById('s_type').value);
+
+    const out = [];
+    for (const sess of DB.sessions){
+      const c = byId(DB.contents, sess.contentId);
+      const author = c?.authorId ? byId(DB.authors, c.authorId) : null;
+      const source = c?.sourceId ? byId(DB.sources, c.sourceId) : null;
+      if (d && sess.date !== d) continue;
+      if (t && !norm(c?.title||'').includes(t)) continue;
+      if (a && !norm(author?.name||'').includes(a)) continue;
+      if (s && !norm(source?.title||'').includes(s)) continue;
+      if (type && norm(c?.type||'') !== type) continue;
+      out.push({sess, c, author, source});
+    }
+
+    const tbody = document.getElementById('tbody_search');
+    tbody.innerHTML = '';
+    for (const row of out.sort((x,y)=> (x.sess.date < y.sess.date ? 1 : -1))){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${row.sess.date}</td>
+        <td>${escapeHtml(row.c?.title || '—')}</td>
+        <td>${escapeHtml(row.c?.type || '—')}</td>
+        <td>${escapeHtml(row.author?.name || '—')}</td>
+        <td>${escapeHtml(row.source?.title || '—')}</td>
+        <td>${row.sess.durationMin}</td>
+        <td>${row.sess.points}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+    document.getElementById('search_count').textContent = `${out.length} result(s)`;
+  }
+
+  function renderStats(){
+    const kSess = DB.sessions.length;
+    const kMin = DB.sessions.reduce((a,b)=> a + (b.durationMin||0), 0);
+    const kPts = DB.sessions.reduce((a,b)=> a + (b.points||0), 0);
+    document.getElementById('k_total_sessions').textContent = kSess;
+    document.getElementById('k_total_minutes').textContent = kMin;
+    document.getElementById('k_total_points').textContent = kPts;
+    document.getElementById('k_level').textContent = currentLevel();
+
+    // Daily for last 14 days (local time)
+    const tbody = document.getElementById('tbody_daily');
+    tbody.innerHTML = '';
+    const today = new Date();
+    for (let i = 13; i >= 0; i--){
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+      const key = ymdLocal(d);
+      const list = DB.sessions.filter(s => s.date === key);
+      const sessions = list.length;
+      const minutes = list.reduce((a,b)=> a + (b.durationMin||0), 0);
+      const points = list.reduce((a,b)=> a + (b.points||0), 0);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${key}</td><td>${sessions}</td><td>${minutes}</td><td>${points}</td>`;
+      tbody.appendChild(tr);
+    }
+
+    // Progression text
+    const pDiv = document.getElementById('progression_text');
+    pDiv.innerHTML = '';
+    const milestones = [
+      { label: 'Apprentice', need: Math.max(0, 20 - sessionsAtLeast(5)), desc: 'sessions ≥ 5 min' },
+      { label: 'Intermediate', need: Math.max(0, 15 - sessionsAtLeast(10)), desc: 'sessions ≥ 10 min' },
+      { label: 'Advanced', need: Math.max(0, 15 - sessionsAtLeast(20)), desc: 'sessions ≥ 20 min' },
+      { label: 'Master', need: Math.max(0, 15 - sessionsAtLeast(40)), desc: 'sessions ≥ 40 min' },
+      { label: 'Expert', need: Math.max(0, 10 - sessionsAtLeast(80)), desc: 'sessions ≥ 80 min' },
+    ];
+    milestones.forEach(m=>{
+      const div = document.createElement('div');
+      const done = m.need === 0;
+      div.innerHTML = `<span class="tag">${m.label}</span> — ${done ? 'Completed ✅' : `${m.need} more ${m.desc}`}`;
+      pDiv.appendChild(div);
+    });
+  }
+
+  function renderDataTables(){
+    // Contents
+    const tbC = document.getElementById('tbody_contents'); tbC.innerHTML = '';
+    for (const c of DB.contents){
+      const a = c.authorId ? byId(DB.authors, c.authorId) : null;
+      const s = c.sourceId ? byId(DB.sources, c.sourceId) : null;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(c.title)}</td>
+        <td>${escapeHtml(c.type||'')}</td>
+        <td>${escapeHtml(a?.name || '')}</td>
+        <td>${escapeHtml(s?.title || '')}</td>
+        <td>${c.year || ''}</td>
+        <td>${escapeHtml(c.language || '')}</td>
+        <td class="small muted">${c.id}</td>
+      `;
+      tbC.appendChild(tr);
+    }
+    // Authors
+    const tbA = document.getElementById('tbody_authors'); tbA.innerHTML = '';
+    for (const a of DB.authors){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(a.name)}</td><td class="small muted">${a.id}</td>`;
+      tbA.appendChild(tr);
+    }
+    // Sources
+    const tbS = document.getElementById('tbody_sources'); tbS.innerHTML = '';
+    for (const s of DB.sources){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(s.title)}</td><td>${escapeHtml(s.type||'')}</td><td>${s.year||''}</td><td>${escapeHtml(s.country||'')}</td><td class="small muted">${s.id}</td>`;
+      tbS.appendChild(tr);
+    }
+  }
+
+  function renderAll(){
+    renderSessionsTable();
+    renderSearch();
+    renderStats();
+    renderDataTables();
+    renderActiveTimerUI();
+  }
+
+  // --- Export / Import / Clear ---
+  function exportJSON(){
+    const data = JSON.stringify(DB, null, 2);
+    const blob = new Blob([data], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'focus-data.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+  }
+  function importJSON(file){
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (!obj || !obj.sessions || !obj.contents) throw new Error('Invalid file.');
+        DB = obj; saveDB(DB); renderAll();
+        alert('Import complete.');
+      } catch(err) {
+        alert('Import failed: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+  function clearAll(){
+    if (confirm('This will delete all data. Continue?')) {
+      DB = { authors: [], sources: [], contents: [], sessions: [], meta: { createdAt: new Date().toISOString(), version: 2 } };
+      saveDB(DB); renderAll();
+    }
+  }
+
+  // --- Session editor view (new window) ---
+  function loadEditorSession(id){
+    const s = DB.sessions.find(x => x.id === id);
+    if (!s) { alert('Session not found.'); return; }
+    const c = byId(DB.contents, s.contentId);
+    const a = c?.authorId ? byId(DB.authors, c.authorId) : null;
+    const src = c?.sourceId ? byId(DB.sources, c.sourceId) : null;
+
+    document.getElementById('e_date').value = s.date;
+    document.getElementById('e_minutes').value = s.durationMin;
+    document.getElementById('e_summary').value = s.summary || '';
+
+    document.getElementById('e_title').value = c?.title || '';
+    document.getElementById('e_type').value = c?.type || '';
+    document.getElementById('e_author').value = a?.name || '';
+    document.getElementById('e_source').value = src?.title || '';
+    document.getElementById('e_source_type').value = src?.type || '';
+
+    document.getElementById('e_url').value = c?.url || '';
+    document.getElementById('e_genre').value = c?.genre || '';
+    document.getElementById('e_topic').value = c?.topic || '';
+    document.getElementById('e_language').value = c?.language || '';
+    document.getElementById('e_year').value = c?.year || '';
+    document.getElementById('e_country').value = c?.country || '';
+  }
+
+  function saveEditorSession(id){
+    const s = DB.sessions.find(x => x.id === id);
+    if (!s) return;
+    const c = byId(DB.contents, s.contentId);
+
+    // Update session
+    s.date = document.getElementById('e_date').value;
+    s.durationMin = Number(document.getElementById('e_minutes').value || s.durationMin);
+    s.points = computePoints(s.durationMin);
+    s.summary = document.getElementById('e_summary').value.trim();
+
+    // Update content and relations
+    const title = document.getElementById('e_title').value.trim();
+    const type = document.getElementById('e_type').value;
+    const authorName = document.getElementById('e_author').value.trim();
+    const sourceTitle = document.getElementById('e_source').value.trim();
+    const sourceType = document.getElementById('e_source_type').value;
+
+    const url = document.getElementById('e_url').value.trim();
+    const genre = document.getElementById('e_genre').value.trim();
+    const topic = document.getElementById('e_topic').value.trim();
+    const language = document.getElementById('e_language').value.trim();
+    const year = document.getElementById('e_year').value ? Number(document.getElementById('e_year').value) : null;
+    const country = document.getElementById('e_country').value.trim();
+
+    const author = authorName ? findOrCreateAuthor(authorName) : null;
+    const source = sourceTitle ? findOrCreateSource({title: sourceTitle, type: sourceType, year: null, country: '', authorId: author? author.id : null}) : null;
+
+    if (c){
+      c.title = title || c.title;
+      c.type = type || c.type;
+      c.url = url;
+      c.genre = genre;
+      c.topic = topic;
+      c.language = language;
+      c.year = year;
+      c.country = country;
+      c.authorId = author ? author.id : null;
+      c.sourceId = source ? source.id : null;
+    }
+
+    saveDB(DB);
+    alert('Saved.');
+  }
+
+  function deleteEditorSession(id){
+    if (!confirm('Delete this session?')) return;
+    DB.sessions = DB.sessions.filter(x => x.id !== id);
+    saveDB(DB);
+    alert('Deleted.');
+    window.close();
+  }
+
+  // --- Tab nav ---
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=> b.classList.remove('active'));
+      document.querySelectorAll('section').forEach(s=> s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+
+  // --- Wire controls ---
+  // Focus tab
+  document.getElementById('btn_start').addEventListener('click', startTimer);
+  document.getElementById('btn_pause').addEventListener('click', pauseTimer);
+  document.getElementById('btn_resume').addEventListener('click', resumeTimer);
+  document.getElementById('btn_cancel').addEventListener('click', cancelTimer);
+  document.getElementById('btn_save_session').addEventListener('click', saveSession);
+
+  // Mini popout
+  document.getElementById('btn_popout').addEventListener('click', ()=>{
+    const url = new URL(window.location.href);
+    url.search = '?mini=1';
+    window.open(url.toString(), 'FocusMiniTimer', 'width=320,height=240');
+  });
+
+  // Search
+  document.getElementById('btn_search').addEventListener('click', performSearch);
+  document.getElementById('btn_search_reset').addEventListener('click', ()=>{
+    document.getElementById('s_date').value = '';
+    document.getElementById('s_title').value = '';
+    document.getElementById('s_author').value = '';
+    document.getElementById('s_source').value = '';
+    document.getElementById('s_type').value = '';
+    renderSearch();
+  });
+
+  // Data
+  document.getElementById('btn_export').addEventListener('click', exportJSON);
+  document.getElementById('file_import').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    if (f) importJSON(f);
+    e.target.value = '';
+  });
+  document.getElementById('btn_clear').addEventListener('click', clearAll);
+
+  // Mini window controls
+  const miniPause = document.getElementById('mini_pause');
+  const miniResume = document.getElementById('mini_resume');
+  const miniClose = document.getElementById('mini_close');
+  if (miniPause) miniPause.addEventListener('click', pauseTimer);
+  if (miniResume) miniResume.addEventListener('click', resumeTimer);
+  if (miniClose) miniClose.addEventListener('click', ()=> window.close());
+
+  // Session editor wiring (only when ?editSession=ID)
+  const params = new URLSearchParams(location.search);
+  const miniMode = params.get('mini') === '1';
+  const editId = params.get('editSession');
+
+  if (miniMode){
+    document.body.classList.add('mini');
+  } else {
+    document.body.classList.remove('mini');
+  }
+
+  if (editId){
+    // Hide regular UI, show editor
+    document.querySelectorAll('.mini-hide, nav, #tab-focus, #tab-log, #tab-search, #tab-stats, #tab-data').forEach(el=> el && (el.style.display = 'none'));
+    document.getElementById('tab-session-editor').style.display = 'block';
+    loadEditorSession(editId);
+    document.getElementById('btn_close_editor').addEventListener('click', ()=> window.close());
+    document.getElementById('btn_save_edit').addEventListener('click', ()=> saveEditorSession(editId));
+    document.getElementById('btn_delete_session').addEventListener('click', ()=> deleteEditorSession(editId));
+  }
+
+  // Defaults
+  if (document.getElementById('f_date')) document.getElementById('f_date').value = todayStr();
+  renderAll();
+  startUITick();
+
+  // Keep UI accurate when page visibility changes
+  document.addEventListener('visibilitychange', renderActiveTimerUI);
+
+</script>
+</body>
+</html>

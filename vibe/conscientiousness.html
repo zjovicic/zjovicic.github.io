@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Conscientiousness Training</title>
+  <style>
+    /* ===== CSS RESET ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ===== CSS VARIABLES ===== */
+    :root {
+      --bg-primary: #0f0f14;
+      --bg-secondary: #1a1a24;
+      --bg-tertiary: #252530;
+      --text-primary: #e8e8ec;
+      --text-secondary: #9898a8;
+      --text-muted: #5c5c6c;
+      --accent-primary: #5b7fa3;
+      --accent-hover: #6d94bc;
+      --success: #4a7c59;
+      --success-light: #5a9c6a;
+      --warning: #a68c3c;
+      --danger: #8b4a4a;
+      --danger-light: #a85a5a;
+      --border: #2a2a38;
+      --border-focus: #5b7fa3;
+
+      --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      --font-mono: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+
+      --text-xs: 0.75rem;
+      --text-sm: 0.875rem;
+      --text-base: 1rem;
+      --text-lg: 1.125rem;
+      --text-xl: 1.25rem;
+      --text-2xl: 1.5rem;
+      --text-3xl: 1.875rem;
+
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+    }
+
+    /* ===== BASE STYLES ===== */
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    #app {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: var(--space-4);
+      min-height: 100vh;
+    }
+
+    @media (min-width: 768px) {
+      #app {
+        padding: var(--space-8);
+      }
+    }
+
+    h1, h2, h3 {
+      line-height: 1.25;
+      font-weight: 600;
+    }
+
+    h1 { font-size: var(--text-2xl); margin-bottom: var(--space-6); }
+    h2 { font-size: var(--text-xl); margin-bottom: var(--space-4); }
+    h3 { font-size: var(--text-lg); margin-bottom: var(--space-3); }
+
+    p { margin-bottom: var(--space-4); color: var(--text-secondary); }
+
+    a {
+      color: var(--accent-primary);
+      text-decoration: none;
+    }
+    a:hover { color: var(--accent-hover); }
+
+    /* ===== COMPONENT STYLES ===== */
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-3) var(--space-6);
+      border: none;
+      border-radius: 6px;
+      font-size: var(--text-base);
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--accent-primary);
+      color: var(--text-primary);
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--text-secondary);
+      color: var(--text-primary);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: var(--text-primary);
+    }
+    .btn-success:hover { background: var(--success-light); }
+
+    .btn-danger {
+      background: var(--danger);
+      color: var(--text-primary);
+    }
+    .btn-danger:hover { background: var(--danger-light); }
+
+    .btn-small {
+      padding: var(--space-2) var(--space-4);
+      font-size: var(--text-sm);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: var(--space-3);
+      margin-top: var(--space-6);
+    }
+
+    .btn-group .btn {
+      flex: 1;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: var(--space-6);
+      margin-bottom: var(--space-4);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-4);
+    }
+
+    .card-title {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      margin: 0;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: var(--space-6);
+    }
+
+    .form-label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-2);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: var(--space-3);
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: var(--text-base);
+      font-family: inherit;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--border-focus);
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Radio & Checkbox */
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+
+    .option-item:hover {
+      border-color: var(--text-muted);
+    }
+
+    .option-item.selected {
+      border-color: var(--accent-primary);
+      background: rgba(91, 127, 163, 0.1);
+    }
+
+    .option-item input {
+      margin-top: 2px;
+      accent-color: var(--accent-primary);
+    }
+
+    .option-content {
+      flex: 1;
+    }
+
+    .option-title {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .option-desc {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      margin-top: var(--space-1);
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-primary);
+      transition: width 0.3s ease;
+    }
+
+    .progress-fill.success { background: var(--success); }
+    .progress-fill.warning { background: var(--warning); }
+    .progress-fill.danger { background: var(--danger); }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-3);
+    }
+
+    .stat-item {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: var(--space-4);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: var(--text-2xl);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .stat-label {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      margin-top: var(--space-1);
+    }
+
+    /* Habit List */
+    .habit-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .habit-item {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: var(--space-4);
+    }
+
+    .habit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-2);
+    }
+
+    .habit-name {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .habit-streak {
+      font-size: var(--text-sm);
+      color: var(--success);
+    }
+
+    .habit-desc {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+    }
+
+    .habit-status {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+
+    .habit-status-btn {
+      flex: 1;
+      padding: var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .habit-status-btn:hover {
+      border-color: var(--text-muted);
+    }
+
+    .habit-status-btn.done {
+      background: var(--success);
+      border-color: var(--success);
+      color: var(--text-primary);
+    }
+
+    .habit-status-btn.missed {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: var(--text-primary);
+    }
+
+    .habit-status-btn.excused {
+      background: var(--warning);
+      border-color: var(--warning);
+      color: var(--text-primary);
+    }
+
+    /* Phase Display */
+    .phase-display {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+    }
+
+    .phase-title {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-2);
+    }
+
+    .phase-name {
+      font-size: var(--text-xl);
+      font-weight: 600;
+      margin-bottom: var(--space-4);
+    }
+
+    .phase-progress {
+      margin-bottom: var(--space-2);
+    }
+
+    .phase-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    /* Assessment Scale */
+    .scale-container {
+      margin-bottom: var(--space-8);
+    }
+
+    .scale-question {
+      font-size: var(--text-base);
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+    }
+
+    .scale-options {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+
+    .scale-option {
+      flex: 1;
+      padding: var(--space-3);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: var(--text-sm);
+    }
+
+    .scale-option:hover {
+      border-color: var(--text-muted);
+    }
+
+    .scale-option.selected {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: var(--text-primary);
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: var(--space-2);
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: var(--space-6) 0;
+    }
+
+    /* Alert */
+    .alert {
+      padding: var(--space-4);
+      border-radius: 6px;
+      margin-bottom: var(--space-4);
+      font-size: var(--text-sm);
+    }
+
+    .alert-info {
+      background: rgba(91, 127, 163, 0.15);
+      border: 1px solid var(--accent-primary);
+      color: var(--text-secondary);
+    }
+
+    .alert-warning {
+      background: rgba(166, 140, 60, 0.15);
+      border: 1px solid var(--warning);
+      color: var(--text-secondary);
+    }
+
+    .alert-success {
+      background: rgba(74, 124, 89, 0.15);
+      border: 1px solid var(--success);
+      color: var(--text-secondary);
+    }
+
+    /* Screen specific */
+    .screen-header {
+      margin-bottom: var(--space-8);
+    }
+
+    .screen-header h1 {
+      margin-bottom: var(--space-2);
+    }
+
+    .screen-header p {
+      margin-bottom: 0;
+    }
+
+    .commitment-text {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+      font-size: var(--text-sm);
+      line-height: 1.7;
+    }
+
+    .commitment-text p {
+      color: var(--text-secondary);
+    }
+
+    .commitment-text p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--space-6);
+    }
+
+    .tab {
+      padding: var(--space-3) var(--space-4);
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.15s ease;
+    }
+
+    .tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .tab.active {
+      color: var(--accent-primary);
+      border-bottom-color: var(--accent-primary);
+    }
+
+    /* Chart */
+    .chart-container {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      overflow-x: auto;
+    }
+
+    .chart-container svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      z-index: 1000;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: var(--space-6);
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal h2 {
+      margin-bottom: var(--space-4);
+    }
+
+    /* Results */
+    .result-comparison {
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      padding: var(--space-6) 0;
+    }
+
+    .result-item h3 {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      font-weight: normal;
+      margin-bottom: var(--space-2);
+    }
+
+    .result-item .value {
+      font-size: var(--text-3xl);
+      font-weight: 600;
+    }
+
+    .result-item .value.improved {
+      color: var(--success);
+    }
+
+    .result-arrow {
+      display: flex;
+      align-items: center;
+      font-size: var(--text-2xl);
+      color: var(--text-muted);
+    }
+
+    /* Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: var(--space-2) 0;
+      padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-2) var(--space-4);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.15s ease;
+      font-size: var(--text-xs);
+    }
+
+    .nav-item:hover {
+      color: var(--text-secondary);
+    }
+
+    .nav-item.active {
+      color: var(--accent-primary);
+    }
+
+    .nav-icon {
+      font-size: var(--text-xl);
+      margin-bottom: var(--space-1);
+    }
+
+    .has-bottom-nav {
+      padding-bottom: 80px;
+    }
+
+    /* Utility */
+    .text-center { text-align: center; }
+    .text-success { color: var(--success); }
+    .text-warning { color: var(--warning); }
+    .text-danger { color: var(--danger); }
+    .text-muted { color: var(--text-muted); }
+    .text-sm { font-size: var(--text-sm); }
+    .mt-4 { margin-top: var(--space-4); }
+    .mt-6 { margin-top: var(--space-6); }
+    .mb-4 { margin-bottom: var(--space-4); }
+    .mb-6 { margin-bottom: var(--space-6); }
+    .hidden { display: none !important; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // ===== CONFIGURATION & CONSTANTS =====
+    const APP_VERSION = '1.0.0';
+    const STORAGE_KEY = 'conscientiousness_app_state';
+
+    const PHASE_CONFIG = {
+      1: { name: 'Foundation', minDays: 14, complianceRequired: 80, streakRequired: 14 },
+      2: { name: 'Expansion', minDays: 21, complianceRequired: 75, streakRequired: 21 },
+      3: { name: 'Consolidation', minDays: 28, complianceRequired: 70, streakRequired: 28 },
+      4: { name: 'Maintenance', minDays: 28, complianceRequired: 70, streakRequired: 28 }
+    };
+
+    const USER_HABITS_ALLOWED = { 1: 1, 2: 2, 3: 2, 4: 3 };
+    const USER_HABITS_REQUIRED = { 1: 0, 2: 0, 3: 0, 4: 1 };
+
+    const ESSENTIAL_HABITS = [
+      // Tier 1 (Phase 1)
+      { id: 'sleep-schedule', name: 'Sleep by 2 AM', description: 'Go to bed by 2:00 AM', tier: 1, frequency: 'daily', category: 'sleep' },
+      { id: 'morning-hygiene', name: 'Morning Hygiene', description: 'Brush teeth in the morning', tier: 1, frequency: 'daily', category: 'hygiene' },
+      { id: 'evening-hygiene', name: 'Evening Hygiene', description: 'Brush teeth before bed, shower every other day', tier: 1, frequency: 'daily', category: 'hygiene' },
+      { id: 'productive-block', name: 'Productive Block', description: '2 hours of productive activity (work, study, household, errands)', tier: 1, frequency: 'work-days', category: 'productivity', hoursRequired: 2, excludeForEmployed: true, excludeForStudent: true },
+      
+      // Tier 2 (Phase 2)
+      { id: 'daily-walk', name: '30-Minute Walk', description: '30+ minutes of walking (or equivalent exercise)', tier: 2, frequency: 'daily', category: 'exercise', skippable: true },
+      { id: 'vegetables', name: 'Eat Vegetables', description: 'At least one serving (100-200g) of fresh vegetables', tier: 2, frequency: 'daily', category: 'nutrition' },
+      { id: 'fruit', name: 'Eat Fruit', description: 'At least one medium piece of fresh fruit', tier: 2, frequency: 'daily', category: 'nutrition' },
+      { id: 'no-weekday-junk', name: 'No Weekday Junk', description: 'Avoid cookies, candy, chips, soda on weekdays', tier: 2, frequency: 'weekdays', category: 'nutrition' },
+      
+      // Tier 3 (Phase 3)
+      { id: 'strength-training', name: 'Strength Training', description: '15+ minutes of resistance exercise', tier: 3, frequency: 'weekly-3x', category: 'exercise', skippable: true },
+      { id: 'reading', name: 'Read 30 Minutes', description: '30+ minutes reading books (any genre)', tier: 3, frequency: 'daily', category: 'development' },
+      { id: 'cleaning', name: 'Clean 30 Minutes', description: '30+ minutes cleaning/tidying', tier: 3, frequency: 'daily', category: 'household', skippable: true },
+      { id: 'socializing', name: 'Socialize 1 Hour', description: '1+ hour of in-person social contact', tier: 3, frequency: 'daily', category: 'social' },
+      { id: 'mindful-eating', name: 'No Screens While Eating', description: 'Eat without phone, computer, or TV', tier: 3, frequency: 'daily', category: 'nutrition' },
+      { id: 'alcohol-moderation', name: 'Max 2 Drinks', description: 'Maximum 2 alcoholic drinks per day', tier: 3, frequency: 'daily', category: 'health', optional: true },
+      { id: 'no-smoking', name: 'No Smoking', description: 'Do not smoke', tier: 3, frequency: 'daily', category: 'health', optional: true }
+    ];
+
+    const ASSESSMENT_QUESTIONS = [
+      { id: 1, text: 'I keep my belongings neat and organized.', facet: 'orderliness', positive: true },
+      { id: 2, text: 'I often leave tasks unfinished.', facet: 'self-discipline', positive: false },
+      { id: 3, text: 'I work hard to achieve my goals.', facet: 'achievement', positive: true },
+      { id: 4, text: 'I frequently act without thinking through consequences.', facet: 'deliberation', positive: false },
+      { id: 5, text: 'When I make a commitment, I follow through.', facet: 'dutifulness', positive: true },
+      { id: 6, text: 'I doubt my ability to accomplish difficult tasks.', facet: 'self-efficacy', positive: false },
+      { id: 7, text: 'My living space is usually messy.', facet: 'orderliness', positive: false },
+      { id: 8, text: 'I can resist temptations when I need to.', facet: 'self-discipline', positive: true },
+      { id: 9, text: 'I am satisfied with a "good enough" effort.', facet: 'achievement', positive: false },
+      { id: 10, text: 'I think carefully before making important decisions.', facet: 'deliberation', positive: true },
+      { id: 11, text: 'I sometimes neglect my duties and responsibilities.', facet: 'dutifulness', positive: false },
+      { id: 12, text: 'I feel confident in my ability to handle problems.', facet: 'self-efficacy', positive: true },
+      { id: 13, text: 'I follow a regular routine.', facet: 'orderliness', positive: true },
+      { id: 14, text: 'I give up easily when things get difficult.', facet: 'self-discipline', positive: false },
+      { id: 15, text: 'I strive for excellence in everything I do.', facet: 'achievement', positive: true }
+    ];
+
+    // ===== UTILITY FUNCTIONS =====
+    const DateUtils = {
+      today() {
+        return new Date().toISOString().split('T')[0];
+      },
+      
+      daysBetween(date1, date2) {
+        const d1 = new Date(date1);
+        const d2 = new Date(date2);
+        return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+      },
+      
+      addDays(date, days) {
+        const d = new Date(date);
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+      },
+      
+      isWeekday(date) {
+        const day = new Date(date).getDay();
+        return day !== 0 && day !== 6;
+      },
+      
+      getDayOfWeek(date) {
+        return new Date(date).getDay();
+      },
+      
+      formatDate(date) {
+        return new Date(date).toLocaleDateString('en-US', { 
+          weekday: 'short', month: 'short', day: 'numeric' 
+        });
+      },
+      
+      formatDateLong(date) {
+        return new Date(date).toLocaleDateString('en-US', { 
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        });
+      }
+    };
+
+    // ===== STORAGE MANAGER =====
+    const Storage = {
+      save(state) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+          console.error('Failed to save state:', e);
+        }
+      },
+      
+      load() {
+        try {
+          const data = localStorage.getItem(STORAGE_KEY);
+          return data ? JSON.parse(data) : null;
+        } catch (e) {
+          console.error('Failed to load state:', e);
+          return null;
+        }
+      },
+      
+      clear() {
+        localStorage.removeItem(STORAGE_KEY);
+      },
+      
+      export() {
+        const data = this.load();
+        if (!data) return;
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `conscientiousness-backup-${DateUtils.today()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      
+      import(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const data = JSON.parse(e.target.result);
+              this.save(data);
+              resolve(data);
+            } catch (err) {
+              reject(err);
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+      }
+    };
+
+    // ===== APP STATE =====
+    let state = null;
+
+    function createInitialState() {
+      return {
+        version: APP_VERSION,
+        initialized: false,
+        createdAt: null,
+        lastActiveDate: null,
+        
+        user: {
+          commitmentAccepted: false,
+          commitmentDate: null,
+          employmentStatus: null,
+          workDaysOff: [],
+          isSmoker: null,
+          drinksAlcohol: null
+        },
+        
+        assessment: {
+          entry: { completedAt: null, responses: [], score: null },
+          exit: { completedAt: null, responses: [], score: null }
+        },
+        
+        currentPhase: 0,
+        phaseStartDate: null,
+        consecutiveCompliantDays: 0,
+        
+        habits: [],
+        userHabits: [],
+        habitInventory: {},
+        
+        dailyLogs: {},
+        
+        graduated: false,
+        graduationDate: null,
+        graduationMode: null
+      };
+    }
+
+    function loadState() {
+      state = Storage.load() || createInitialState();
+      return state;
+    }
+
+    function saveState() {
+      Storage.save(state);
+    }
+
+    // ===== ASSESSMENT MODULE =====
+    function calculateAssessmentScore(responses) {
+      let total = 0;
+      responses.forEach(r => {
+        const q = ASSESSMENT_QUESTIONS.find(q => q.id === r.questionId);
+        if (q) {
+          total += q.positive ? r.value : (6 - r.value);
+        }
+      });
+      return total;
+    }
+
+    function rawScoreToPercentile(rawScore) {
+      // 15-75 range
+      const percentileMap = [
+        [20, 5], [25, 12], [30, 20], [35, 28], [40, 38],
+        [45, 48], [50, 58], [55, 68], [60, 77], [65, 85],
+        [70, 92], [75, 98]
+      ];
+      
+      for (let i = 0; i < percentileMap.length; i++) {
+        if (rawScore <= percentileMap[i][0]) {
+          return percentileMap[i][1];
+        }
+      }
+      return 98;
+    }
+
+    function determineStartingPhase(percentile) {
+      if (percentile <= 25) return 1;
+      if (percentile <= 50) return 1; // Could offer choice, defaulting to 1
+      if (percentile <= 70) return 2;
+      if (percentile <= 85) return 3;
+      return 4;
+    }
+
+    // ===== HABITS MODULE =====
+    function getActiveHabits() {
+      const phase = state.currentPhase;
+      const employment = state.user.employmentStatus;
+      
+      let habits = ESSENTIAL_HABITS.filter(h => {
+        // Check tier (phase)
+        if (h.tier > phase) return false;
+        
+        // Check if excluded for employment status
+        if (h.excludeForEmployed && (employment === 'employed-full' || employment === 'employed-part')) {
+          return false;
+        }
+        if (h.excludeForStudent && employment === 'student') {
+          return false;
+        }
+        
+        // Check optional habits based on user settings
+        if (h.id === 'no-smoking' && !state.user.isSmoker) return false;
+        if (h.id === 'alcohol-moderation' && !state.user.drinksAlcohol) return false;
+        
+        return true;
+      });
+      
+      // Add user-defined habits
+      habits = habits.concat(state.userHabits.filter(h => h.active));
+      
+      // Upgrade productive block hours for phase 3+
+      habits = habits.map(h => {
+        if (h.id === 'productive-block' && phase >= 3) {
+          return { ...h, description: '4 hours of productive activity', hoursRequired: 4 };
+        }
+        return h;
+      });
+      
+      return habits;
+    }
+
+    function isHabitApplicableToday(habit, date) {
+      const dayOfWeek = DateUtils.getDayOfWeek(date);
+      
+      if (habit.frequency === 'weekdays') {
+        return DateUtils.isWeekday(date);
+      }
+      
+      if (habit.frequency === 'work-days') {
+        const daysOff = state.user.workDaysOff || [0]; // Default Sunday off
+        return !daysOff.includes(dayOfWeek);
+      }
+      
+      if (habit.frequency === 'weekly-3x') {
+        // For weekly-3x, we check if they've done it 3 times this week
+        // For simplicity, make it applicable Mon, Wed, Fri (1, 3, 5) or user can do any 3
+        return true; // Always show, but track weekly
+      }
+      
+      return true; // daily
+    }
+
+    function getHabitDayNumber(habitId) {
+      const logs = Object.values(state.dailyLogs);
+      let dayCount = 0;
+      
+      for (const log of logs) {
+        if (log.habits && log.habits[habitId]) {
+          dayCount++;
+        }
+      }
+      
+      return dayCount + 1;
+    }
+
+    function getHabitStreak(habitId) {
+      const dates = Object.keys(state.dailyLogs).sort().reverse();
+      let streak = 0;
+      
+      for (const date of dates) {
+        const log = state.dailyLogs[date];
+        if (log.habits && log.habits[habitId]) {
+          if (log.habits[habitId].status === 'done') {
+            streak++;
+          } else if (log.habits[habitId].status === 'missed') {
+            break;
+          }
+          // Excused/NA don't break streak
+        }
+      }
+      
+      return streak;
+    }
+
+    // ===== SCORING MODULE =====
+    function calculateHabitPoints(dayNumber, completed) {
+      const maxPoints = 200;
+      const minPoints = 80;
+      const transitionDays = 21;
+      
+      const progress = Math.min(dayNumber / transitionDays, 1);
+      const rewardPoints = Math.round(maxPoints - (progress * (maxPoints - minPoints)));
+      const penaltyPoints = Math.round(progress * (maxPoints - minPoints));
+      
+      if (completed) {
+        return rewardPoints;
+      } else {
+        return -penaltyPoints;
+      }
+    }
+
+    function calculateDailyScore(date) {
+      const log = state.dailyLogs[date];
+      if (!log || !log.habits) return { score: 0, stability: 0, completed: 0, total: 0 };
+      
+      let score = 0;
+      let applicable = 0;
+      let completed = 0;
+      
+      const habits = getActiveHabits();
+      
+      habits.forEach(habit => {
+        if (!isHabitApplicableToday(habit, date)) return;
+        
+        applicable++;
+        const habitLog = log.habits[habit.id];
+        
+        if (habitLog) {
+          if (habitLog.status === 'done') {
+            completed++;
+            score += calculateHabitPoints(getHabitDayNumber(habit.id), true);
+          } else if (habitLog.status === 'missed') {
+            score += calculateHabitPoints(getHabitDayNumber(habit.id), false);
+          }
+        }
+      });
+      
+      // Perfect day bonus
+      if (completed === applicable && applicable > 0) {
+        score += 50;
+      }
+      
+      const stability = applicable > 0 ? Math.round((completed / applicable) * 100) : 0;
+      
+      return { score, stability, completed, total: applicable };
+    }
+
+    function calculateStability(period = 'week') {
+      const periodDays = { day: 1, week: 7, month: 30, all: 9999 };
+      const days = periodDays[period] || 7;
+      
+      let totalApplicable = 0;
+      let totalCompleted = 0;
+      
+      const dates = Object.keys(state.dailyLogs).sort().reverse().slice(0, days);
+      
+      dates.forEach(date => {
+        const result = calculateDailyScore(date);
+        totalApplicable += result.total;
+        totalCompleted += result.completed;
+      });
+      
+      return totalApplicable > 0 ? Math.round((totalCompleted / totalApplicable) * 100) : 0;
+    }
+
+    // ===== PHASE MODULE =====
+    function checkPhaseProgress() {
+      const phase = state.currentPhase;
+      if (phase < 1 || phase > 4) return null;
+      
+      const config = PHASE_CONFIG[phase];
+      const daysSinceStart = DateUtils.daysBetween(state.phaseStartDate, DateUtils.today());
+      const weeklyStability = calculateStability('week');
+      
+      // Check if today meets compliance
+      const todayLog = state.dailyLogs[DateUtils.today()];
+      const todayResult = todayLog ? calculateDailyScore(DateUtils.today()) : null;
+      const todayMeetsCompliance = todayResult && todayResult.stability >= config.complianceRequired;
+      
+      return {
+        phase,
+        config,
+        daysSinceStart,
+        consecutiveCompliantDays: state.consecutiveCompliantDays,
+        currentStability: weeklyStability,
+        meetsCompliance: weeklyStability >= config.complianceRequired,
+        canAdvance: state.consecutiveCompliantDays >= config.streakRequired
+      };
+    }
+
+    function advancePhase() {
+      if (state.currentPhase >= 4) {
+        state.graduated = true;
+        state.graduationDate = DateUtils.today();
+      } else {
+        state.currentPhase++;
+        state.phaseStartDate = DateUtils.today();
+        state.consecutiveCompliantDays = 0;
+      }
+      saveState();
+    }
+
+    // ===== UI RENDERING =====
+    function render(html) {
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function showScreen(screenName, params = {}) {
+      const screen = Screens[screenName];
+      if (screen) {
+        render(screen(params));
+        if (ScreenHandlers[screenName]) {
+          ScreenHandlers[screenName](params);
+        }
+      }
+    }
+
+    // ===== SCREEN DEFINITIONS =====
+    const Screens = {
+      welcome: () => `
+        <div class="screen-header text-center">
+          <h1>Conscientiousness Training</h1>
+          <p>A structured program for developing self-discipline, orderliness, and follow-through.</p>
+        </div>
+        
+        <div class="commitment-text">
+          <p><strong>What this is:</strong> A systematic intervention to help you build conscientiousness through habit formation. It has phases, requirements, and a defined endpoint.</p>
+          
+          <p><strong>What this is not:</strong> A game. A quick fix. Therapy. There are no points to chase, no badges to earn, no leaderboards. This is work.</p>
+          
+          <p><strong>Who made this:</strong> This application was developed by the community, not clinical professionals. It addresses habit formation only—not trauma, mental illness, or deep psychological issues.</p>
+          
+          <p><strong>What's required:</strong> Commitment. Honesty with yourself. Daily check-ins. A willingness to be held accountable.</p>
+          
+          <p><strong>Duration:</strong> Minimum 3-4 months. Recommended 6-12 months for lasting change.</p>
+        </div>
+        
+        <button class="btn btn-primary" onclick="showScreen('commitment')">
+          I Understand — Continue
+        </button>
+      `,
+      
+      commitment: () => `
+        <div class="screen-header">
+          <h1>Commitment</h1>
+          <p>Before beginning, you must accept the following terms.</p>
+        </div>
+        
+        <div class="commitment-text">
+          <p>I understand that this program requires consistent daily effort over several months.</p>
+          
+          <p>I understand that I cannot skip phases or rush the process. I must earn advancement by meeting the requirements.</p>
+          
+          <p>I understand that this app will track my compliance honestly. I commit to logging truthfully, even when I fail.</p>
+          
+          <p>I understand that this tool is not a replacement for professional help if I have serious mental health concerns.</p>
+          
+          <p>I take full responsibility for my use of this application and my own development.</p>
+          
+          <p><strong>I commit to this process.</strong></p>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="showScreen('welcome')">Go Back</button>
+          <button class="btn btn-primary" onclick="acceptCommitment()">I Commit</button>
+        </div>
+      `,
+      
+      assessment: (params = {}) => {
+        const questionIndex = params.questionIndex || 0;
+        const q = ASSESSMENT_QUESTIONS[questionIndex];
+        const responses = params.responses || [];
+        const progress = ((questionIndex) / ASSESSMENT_QUESTIONS.length) * 100;
+        
+        return `
+          <div class="screen-header">
+            <h1>Assessment</h1>
+            <p>Question ${questionIndex + 1} of ${ASSESSMENT_QUESTIONS.length}</p>
+          </div>
+          
+          <div class="progress-bar mb-6">
+            <div class="progress-fill" style="width: ${progress}%"></div>
+          </div>
+          
+          <div class="scale-container">
+            <p class="scale-question">${q.text}</p>
+            
+            <div class="scale-options" id="scale-options">
+              ${[1,2,3,4,5].map(v => `
+                <div class="scale-option" data-value="${v}" onclick="selectAssessmentOption(${v})">${v}</div>
+              `).join('')}
+            </div>
+            
+            <div class="scale-labels">
+              <span>Strongly Disagree</span>
+              <span>Strongly Agree</span>
+            </div>
+          </div>
+          
+          <div class="btn-group">
+            ${questionIndex > 0 ? `
+              <button class="btn btn-secondary" onclick="prevAssessmentQuestion()">Back</button>
+            ` : '<div></div>'}
+            <button class="btn btn-primary" id="next-btn" disabled onclick="nextAssessmentQuestion()">
+              ${questionIndex === ASSESSMENT_QUESTIONS.length - 1 ? 'Complete' : 'Next'}
+            </button>
+          </div>
+        `;
+      },
+      
+      context: () => `
+        <div class="screen-header">
+          <h1>Your Context</h1>
+          <p>Help us calibrate the program to your situation.</p>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">What is your current employment status?</label>
+          <div class="option-group" id="employment-options">
+            ${[
+              { value: 'employed-full', label: 'Employed full-time' },
+              { value: 'employed-part', label: 'Employed part-time' },
+              { value: 'self-employed', label: 'Self-employed / Freelancer' },
+              { value: 'student', label: 'Student' },
+              { value: 'between-jobs', label: 'Between jobs / Unemployed' },
+              { value: 'other', label: 'Other' }
+            ].map(opt => `
+              <div class="option-item" data-value="${opt.value}" onclick="selectEmployment('${opt.value}')">
+                <input type="radio" name="employment" value="${opt.value}">
+                <span class="option-title">${opt.label}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div id="work-days-section" class="form-group hidden">
+          <label class="form-label">Which day(s) would you like off from productive work? (Choose 1-2)</label>
+          <div class="option-group" id="days-off-options">
+            ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, i) => `
+              <div class="option-item" data-value="${i}" onclick="toggleDayOff(${i})">
+                <input type="checkbox" value="${i}">
+                <span class="option-title">${day}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Do you currently smoke?</label>
+          <div class="option-group" id="smoking-options">
+            <div class="option-item" data-value="yes" onclick="selectSmoking(true)">
+              <input type="radio" name="smoking" value="yes">
+              <span class="option-title">Yes</span>
+            </div>
+            <div class="option-item" data-value="no" onclick="selectSmoking(false)">
+              <input type="radio" name="smoking" value="no">
+              <span class="option-title">No</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Do you drink alcohol?</label>
+          <div class="option-group" id="alcohol-options">
+            <div class="option-item" data-value="yes" onclick="selectAlcohol(true)">
+              <input type="radio" name="alcohol" value="yes">
+              <span class="option-title">Yes</span>
+            </div>
+            <div class="option-item" data-value="no" onclick="selectAlcohol(false)">
+              <input type="radio" name="alcohol" value="no">
+              <span class="option-title">No / In recovery</span>
+            </div>
+          </div>
+        </div>
+        
+        <button class="btn btn-primary mt-6" id="context-continue" disabled onclick="submitContext()">
+          Continue
+        </button>
+      `,
+      
+      phaseIntro: (params = {}) => {
+        const phase = params.phase || state.currentPhase;
+        const config = PHASE_CONFIG[phase];
+        const habits = getActiveHabits();
+        const newHabits = habits.filter(h => h.tier === phase);
+        
+        return `
+          <div class="screen-header text-center">
+            <h1>Phase ${phase}: ${config.name}</h1>
+            <p>You are entering a new phase of training.</p>
+          </div>
+          
+          <div class="card">
+            <h3>Requirements</h3>
+            <p>You must maintain <strong>${config.complianceRequired}% compliance</strong> for <strong>${config.streakRequired} consecutive days</strong> to complete this phase.</p>
+          </div>
+          
+          <div class="card">
+            <h3>Your Habits This Phase</h3>
+            <div class="habit-list">
+              ${habits.map(h => `
+                <div class="habit-item">
+                  <div class="habit-name">${h.name} ${h.tier === phase ? '<span class="text-success">(New)</span>' : ''}</div>
+                  <div class="habit-desc">${h.description}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          ${USER_HABITS_ALLOWED[phase] > 0 ? `
+            <div class="card">
+              <h3>Add Your Own Habit (Optional)</h3>
+              <p class="text-sm text-muted">You can add up to ${USER_HABITS_ALLOWED[phase]} custom habit(s) this phase.${USER_HABITS_REQUIRED[phase] > 0 ? ` ${USER_HABITS_REQUIRED[phase]} required.` : ''}</p>
+              <button class="btn btn-secondary btn-small mt-4" onclick="showScreen('addHabit')">+ Add Custom Habit</button>
+            </div>
+          ` : ''}
+          
+          <button class="btn btn-primary mt-6" onclick="startPhase()">Begin Phase ${phase}</button>
+        `;
+      },
+      
+      addHabit: () => `
+        <div class="screen-header">
+          <h1>Add Custom Habit</h1>
+          <p>Define a habit you want to build.</p>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Habit Name</label>
+          <input type="text" class="form-input" id="habit-name" placeholder="e.g., Meditate 10 minutes">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Description (what counts as done)</label>
+          <textarea class="form-textarea" id="habit-desc" placeholder="e.g., Sit quietly and focus on breathing for at least 10 minutes"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Frequency</label>
+          <div class="option-group" id="frequency-options">
+            ${[
+              { value: 'daily', label: 'Every day' },
+              { value: 'weekdays', label: 'Weekdays only' },
+              { value: 'weekly-3x', label: '3 times per week' }
+            ].map(opt => `
+              <div class="option-item" data-value="${opt.value}" onclick="selectFrequency('${opt.value}')">
+                <input type="radio" name="frequency" value="${opt.value}">
+                <span class="option-title">${opt.label}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="showScreen('phaseIntro', { phase: state.currentPhase })">Cancel</button>
+          <button class="btn btn-primary" onclick="saveUserHabit()">Add Habit</button>
+        </div>
+      `,
+      
+      dashboard: () => {
+        const today = DateUtils.today();
+        const todayLog = state.dailyLogs[today];
+        const habits = getActiveHabits();
+        const progress = checkPhaseProgress();
+        const todayScore = todayLog ? calculateDailyScore(today) : null;
+        
+        const hasLoggedToday = todayLog && todayLog.eveningCheckIn;
+        const needsMorningCheckIn = !todayLog || !todayLog.morningCheckIn;
+        
+        return `
+          <div class="has-bottom-nav">
+            <div class="phase-display">
+              <div class="phase-title">Phase ${state.currentPhase}</div>
+              <div class="phase-name">${PHASE_CONFIG[state.currentPhase]?.name || 'Training'}</div>
+              ${progress ? `
+                <div class="progress-bar phase-progress">
+                  <div class="progress-fill ${progress.meetsCompliance ? 'success' : 'warning'}" 
+                       style="width: ${Math.min(100, (progress.consecutiveCompliantDays / progress.config.streakRequired) * 100)}%"></div>
+                </div>
+                <div class="phase-stats">
+                  <span>Day ${progress.consecutiveCompliantDays} of ${progress.config.streakRequired}</span>
+                  <span>Need ${progress.config.complianceRequired}%</span>
+                </div>
+              ` : ''}
+            </div>
+            
+            <div class="stats-grid mb-6">
+              <div class="stat-item">
+                <div class="stat-value">${calculateStability('week')}%</div>
+                <div class="stat-label">This Week</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${calculateStability('month')}%</div>
+                <div class="stat-label">This Month</div>
+              </div>
+            </div>
+            
+            <h2>${DateUtils.formatDate(today)}</h2>
+            
+            ${needsMorningCheckIn ? `
+              <div class="alert alert-info mb-4">
+                <strong>Morning Check-In</strong><br>
+                Review your habits for today and confirm your intention.
+              </div>
+              <button class="btn btn-primary mb-6" onclick="showScreen('morningCheckIn')">
+                Start Morning Check-In
+              </button>
+            ` : !hasLoggedToday ? `
+              <div class="alert alert-info mb-4">
+                <strong>Evening Check-In Available</strong><br>
+                Log your habit completion for today.
+              </div>
+              <button class="btn btn-primary mb-6" onclick="showScreen('eveningCheckIn')">
+                Start Evening Check-In
+              </button>
+            ` : `
+              <div class="alert alert-success mb-4">
+                <strong>Day Logged</strong><br>
+                Today's score: ${todayScore?.score || 0} points (${todayScore?.stability || 0}% completion)
+              </div>
+            `}
+            
+            <h3>Today's Habits</h3>
+            <div class="habit-list">
+              ${habits.filter(h => isHabitApplicableToday(h, today)).map(h => {
+                const habitLog = todayLog?.habits?.[h.id];
+                const streak = getHabitStreak(h.id);
+                return `
+                  <div class="habit-item">
+                    <div class="habit-header">
+                      <span class="habit-name">${h.name}</span>
+                      ${streak > 0 ? `<span class="habit-streak">${streak} day streak</span>` : ''}
+                    </div>
+                    <div class="habit-desc">${h.description}</div>
+                    ${habitLog ? `
+                      <div class="mt-4 text-sm">
+                        Status: <span class="${habitLog.status === 'done' ? 'text-success' : habitLog.status === 'missed' ? 'text-danger' : 'text-warning'}">
+                          ${habitLog.status.charAt(0).toUpperCase() + habitLog.status.slice(1)}
+                        </span>
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+          
+          ${renderBottomNav('dashboard')}
+        `;
+      },
+      
+      morningCheckIn: () => {
+        const today = DateUtils.today();
+        const habits = getActiveHabits().filter(h => isHabitApplicableToday(h, today));
+        
+        return `
+          <div class="screen-header">
+            <h1>Morning Check-In</h1>
+            <p>${DateUtils.formatDateLong(today)}</p>
+          </div>
+          
+          <div class="card">
+            <h3>Today's Habits</h3>
+            <p class="text-sm text-muted mb-4">Review what you need to accomplish today.</p>
+            
+            <div class="habit-list">
+              ${habits.map(h => `
+                <div class="habit-item">
+                  <div class="habit-name">${h.name}</div>
+                  <div class="habit-desc">${h.description}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Any planned exceptions today? (Optional)</label>
+            <textarea class="form-textarea" id="morning-notes" placeholder="e.g., Doctor's appointment, will skip walk"></textarea>
+          </div>
+          
+          <button class="btn btn-primary" onclick="submitMorningCheckIn()">
+            I Intend to Complete These
+          </button>
+        `;
+      },
+      
+      eveningCheckIn: () => {
+        const today = DateUtils.today();
+        const habits = getActiveHabits().filter(h => isHabitApplicableToday(h, today));
+        
+        return `
+          <div class="screen-header">
+            <h1>Evening Check-In</h1>
+            <p>${DateUtils.formatDateLong(today)}</p>
+          </div>
+          
+          <p class="text-muted mb-6">Mark the status of each habit honestly.</p>
+          
+          <div class="habit-list" id="evening-habits">
+            ${habits.map(h => `
+              <div class="habit-item" id="habit-${h.id}">
+                <div class="habit-header">
+                  <span class="habit-name">${h.name}</span>
+                </div>
+                <div class="habit-desc">${h.description}</div>
+                <div class="habit-status">
+                  <button class="habit-status-btn" data-habit="${h.id}" data-status="done" onclick="selectHabitStatus('${h.id}', 'done')">Done</button>
+                  <button class="habit-status-btn" data-habit="${h.id}" data-status="missed" onclick="selectHabitStatus('${h.id}', 'missed')">Missed</button>
+                  ${h.skippable ? `
+                    <button class="habit-status-btn" data-habit="${h.id}" data-status="excused" onclick="selectHabitStatus('${h.id}', 'excused')">N/A</button>
+                  ` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <button class="btn btn-primary mt-6" id="submit-evening" onclick="submitEveningCheckIn()">
+            Submit Day
+          </button>
+        `;
+      },
+      
+      daySummary: (params = {}) => {
+        const date = params.date || DateUtils.today();
+        const result = calculateDailyScore(date);
+        const progress = checkPhaseProgress();
+        
+        return `
+          <div class="screen-header text-center">
+            <h1>Day Complete</h1>
+            <p>${DateUtils.formatDateLong(date)}</p>
+          </div>
+          
+          <div class="stats-grid mb-6">
+            <div class="stat-item">
+              <div class="stat-value">${result.completed}/${result.total}</div>
+              <div class="stat-label">Habits Done</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${result.stability}%</div>
+              <div class="stat-label">Completion</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value ${result.score >= 0 ? 'text-success' : 'text-danger'}">${result.score >= 0 ? '+' : ''}${result.score}</div>
+              <div class="stat-label">Points</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${calculateStability('week')}%</div>
+              <div class="stat-label">Week Avg</div>
+            </div>
+          </div>
+          
+          ${progress ? `
+            <div class="card">
+              <h3>Phase ${progress.phase} Progress</h3>
+              <div class="progress-bar mb-4">
+                <div class="progress-fill ${progress.meetsCompliance ? 'success' : 'warning'}" 
+                     style="width: ${Math.min(100, (progress.consecutiveCompliantDays / progress.config.streakRequired) * 100)}%"></div>
+              </div>
+              <p class="text-sm text-muted">
+                ${progress.consecutiveCompliantDays} of ${progress.config.streakRequired} consecutive compliant days
+                ${progress.canAdvance ? '<br><strong class="text-success">You can advance to the next phase!</strong>' : ''}
+              </p>
+            </div>
+          ` : ''}
+          
+          ${progress?.canAdvance ? `
+            <button class="btn btn-success mb-4" onclick="advanceToNextPhase()">
+              Advance to Phase ${state.currentPhase + 1}
+            </button>
+          ` : ''}
+          
+          <button class="btn btn-primary" onclick="showScreen('dashboard')">
+            Continue
+          </button>
+        `;
+      },
+      
+      stats: () => {
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+          const date = DateUtils.addDays(DateUtils.today(), -i);
+          const result = calculateDailyScore(date);
+          last7Days.push({ date, ...result });
+        }
+        
+        const habits = getActiveHabits();
+        
+        return `
+          <div class="has-bottom-nav">
+            <div class="screen-header">
+              <h1>Statistics</h1>
+            </div>
+            
+            <div class="stats-grid mb-6">
+              <div class="stat-item">
+                <div class="stat-value">${calculateStability('week')}%</div>
+                <div class="stat-label">This Week</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${calculateStability('month')}%</div>
+                <div class="stat-label">This Month</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${calculateStability('all')}%</div>
+                <div class="stat-label">All Time</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${Object.keys(state.dailyLogs).length}</div>
+                <div class="stat-label">Days Logged</div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <h3>Last 7 Days</h3>
+              <div class="chart-container">
+                ${renderSimpleChart(last7Days)}
+              </div>
+            </div>
+            
+            <div class="card">
+              <h3>Habit Streaks</h3>
+              <div class="habit-list">
+                ${habits.map(h => {
+                  const streak = getHabitStreak(h.id);
+                  return `
+                    <div class="habit-item" style="padding: var(--space-3);">
+                      <div class="habit-header" style="margin-bottom: 0;">
+                        <span class="habit-name">${h.name}</span>
+                        <span class="${streak > 0 ? 'text-success' : 'text-muted'}">${streak} days</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+          
+          ${renderBottomNav('stats')}
+        `;
+      },
+      
+      settings: () => `
+        <div class="has-bottom-nav">
+          <div class="screen-header">
+            <h1>Settings</h1>
+          </div>
+          
+          <div class="card">
+            <h3>Data Management</h3>
+            <p class="text-sm text-muted mb-4">Your data is stored only on this device.</p>
+            <div class="btn-group" style="flex-direction: column;">
+              <button class="btn btn-secondary" onclick="exportData()">Export Data</button>
+              <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">Import Data</button>
+              <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3>Account</h3>
+            <p class="text-sm text-muted mb-4">Started: ${state.createdAt ? DateUtils.formatDateLong(state.createdAt) : 'Unknown'}</p>
+            <p class="text-sm text-muted mb-4">Current Phase: ${state.currentPhase}</p>
+            <p class="text-sm text-muted mb-4">Employment: ${state.user.employmentStatus || 'Not set'}</p>
+          </div>
+          
+          <div class="card">
+            <h3>Danger Zone</h3>
+            <button class="btn btn-danger" onclick="confirmReset()">Reset All Data</button>
+          </div>
+        </div>
+        
+        ${renderBottomNav('settings')}
+      `,
+      
+      graduation: () => {
+        const entry = state.assessment.entry;
+        const exit = state.assessment.exit;
+        const daysTaken = DateUtils.daysBetween(state.createdAt, state.graduationDate || DateUtils.today());
+        
+        return `
+          <div class="screen-header text-center">
+            <h1>🎓 Congratulations</h1>
+            <p>You have completed the Conscientiousness Training Program.</p>
+          </div>
+          
+          <div class="card">
+            <h3>Your Transformation</h3>
+            <div class="result-comparison">
+              <div class="result-item">
+                <h3>Entry</h3>
+                <div class="value">${entry.score}%</div>
+              </div>
+              <div class="result-arrow">→</div>
+              <div class="result-item">
+                <h3>Exit</h3>
+                <div class="value improved">${exit.score}%</div>
+              </div>
+            </div>
+            <p class="text-center text-sm text-muted">
+              Change: +${exit.score - entry.score} percentile points
+            </p>
+          </div>
+          
+          <div class="card">
+            <h3>Journey Statistics</h3>
+            <p class="text-sm">Training Duration: <strong>${daysTaken} days</strong></p>
+            <p class="text-sm">Days Logged: <strong>${Object.keys(state.dailyLogs).length}</strong></p>
+            <p class="text-sm">Overall Stability: <strong>${calculateStability('all')}%</strong></p>
+          </div>
+          
+          <div class="card">
+            <h3>What's Next?</h3>
+            <div class="option-group">
+              <div class="option-item" onclick="selectGraduationMode('exit')">
+                <input type="radio" name="grad-mode" value="exit">
+                <div class="option-content">
+                  <div class="option-title">Graduate and Exit</div>
+                  <div class="option-desc">Manage your habits independently. You can return anytime.</div>
+                </div>
+              </div>
+              <div class="option-item" onclick="selectGraduationMode('maintenance')">
+                <input type="radio" name="grad-mode" value="maintenance">
+                <div class="option-content">
+                  <div class="option-title">Maintenance Mode</div>
+                  <div class="option-desc">Weekly check-ins instead of daily. Light-touch accountability.</div>
+                </div>
+              </div>
+              <div class="option-item" onclick="selectGraduationMode('advanced')">
+                <input type="radio" name="grad-mode" value="advanced">
+                <div class="option-content">
+                  <div class="option-title">Advanced Training</div>
+                  <div class="option-desc">Raise your standards. Add more habits. Push further.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <button class="btn btn-primary mt-4" id="confirm-graduation" disabled onclick="confirmGraduation()">
+            Confirm Choice
+          </button>
+        `;
+      },
+      
+      exitAssessment: (params = {}) => {
+        const questionIndex = params.questionIndex || 0;
+        const q = ASSESSMENT_QUESTIONS[questionIndex];
+        const responses = params.responses || [];
+        const progress = ((questionIndex) / ASSESSMENT_QUESTIONS.length) * 100;
+        
+        return `
+          <div class="screen-header">
+            <h1>Final Assessment</h1>
+            <p>Question ${questionIndex + 1} of ${ASSESSMENT_QUESTIONS.length}</p>
+          </div>
+          
+          <div class="alert alert-info mb-4">
+            Answer based on how you are <strong>now</strong>, not how you were when you started.
+          </div>
+          
+          <div class="progress-bar mb-6">
+            <div class="progress-fill" style="width: ${progress}%"></div>
+          </div>
+          
+          <div class="scale-container">
+            <p class="scale-question">${q.text}</p>
+            
+            <div class="scale-options" id="scale-options">
+              ${[1,2,3,4,5].map(v => `
+                <div class="scale-option" data-value="${v}" onclick="selectExitAssessmentOption(${v})">${v}</div>
+              `).join('')}
+            </div>
+            
+            <div class="scale-labels">
+              <span>Strongly Disagree</span>
+              <span>Strongly Agree</span>
+            </div>
+          </div>
+          
+          <div class="btn-group">
+            ${questionIndex > 0 ? `
+              <button class="btn btn-secondary" onclick="prevExitAssessmentQuestion()">Back</button>
+            ` : '<div></div>'}
+            <button class="btn btn-primary" id="next-btn" disabled onclick="nextExitAssessmentQuestion()">
+              ${questionIndex === ASSESSMENT_QUESTIONS.length - 1 ? 'Complete' : 'Next'}
+            </button>
+          </div>
+        `;
+      }
+    };
+
+    // ===== HELPER RENDER FUNCTIONS =====
+    function renderBottomNav(active) {
+      return `
+        <nav class="bottom-nav">
+          <div class="nav-item ${active === 'dashboard' ? 'active' : ''}" onclick="showScreen('dashboard')">
+            <span class="nav-icon">📋</span>
+            <span>Today</span>
+          </div>
+          <div class="nav-item ${active === 'stats' ? 'active' : ''}" onclick="showScreen('stats')">
+            <span class="nav-icon">📊</span>
+            <span>Stats</span>
+          </div>
+          <div class="nav-item ${active === 'settings' ? 'active' : ''}" onclick="showScreen('settings')">
+            <span class="nav-icon">⚙️</span>
+            <span>Settings</span>
+          </div>
+        </nav>
+      `;
+    }
+
+    function renderSimpleChart(data) {
+      const width = 280;
+      const height = 120;
+      const padding = 20;
+      const maxVal = Math.max(...data.map(d => d.stability), 100);
+      
+      const pointsData = data.map((d, i) => {
+        const x = padding + (i / (data.length - 1)) * (width - padding * 2);
+        const y = height - padding - (d.stability / maxVal) * (height - padding * 2);
+        return { x, y, stability: d.stability, date: d.date };
+      });
+      
+      const pathD = pointsData.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      
+      return `
+        <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: auto;">
+          <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="var(--border)" stroke-width="1"/>
+          <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" stroke="var(--border)" stroke-width="1"/>
+          <path d="${pathD}" fill="none" stroke="var(--accent-primary)" stroke-width="2"/>
+          ${pointsData.map(p => `
+            <circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--accent-primary)"/>
+          `).join('')}
+          ${pointsData.map(p => `
+            <text x="${p.x}" y="${height - 5}" text-anchor="middle" fill="var(--text-muted)" font-size="8">
+              ${new Date(p.date).getDate()}
+            </text>
+          `).join('')}
+        </svg>
+      `;
+    }
+
+    // ===== SCREEN HANDLERS =====
+    const ScreenHandlers = {};
+
+    // ===== EVENT HANDLERS =====
+    let assessmentResponses = [];
+    let currentQuestionIndex = 0;
+    let selectedEmployment = null;
+    let selectedDaysOff = [];
+    let selectedSmoking = null;
+    let selectedAlcohol = null;
+    let selectedHabitStatuses = {};
+    let selectedHabitFrequency = null;
+    let exitAssessmentResponses = [];
+    let exitQuestionIndex = 0;
+    let selectedGraduationMode = null;
+
+    function acceptCommitment() {
+      state.user.commitmentAccepted = true;
+      state.user.commitmentDate = DateUtils.today();
+      state.createdAt = DateUtils.today();
+      saveState();
+      assessmentResponses = [];
+      currentQuestionIndex = 0;
+      showScreen('assessment', { questionIndex: 0, responses: [] });
+    }
+
+    function selectAssessmentOption(value) {
+      document.querySelectorAll('.scale-option').forEach(el => el.classList.remove('selected'));
+      document.querySelector(`.scale-option[data-value="${value}"]`).classList.add('selected');
+      
+      assessmentResponses[currentQuestionIndex] = { 
+        questionId: ASSESSMENT_QUESTIONS[currentQuestionIndex].id, 
+        value 
+      };
+      
+      document.getElementById('next-btn').disabled = false;
+    }
+
+    function nextAssessmentQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex >= ASSESSMENT_QUESTIONS.length) {
+        // Assessment complete
+        const rawScore = calculateAssessmentScore(assessmentResponses);
+        const percentile = rawScoreToPercentile(rawScore);
+        
+        state.assessment.entry = {
+          completedAt: DateUtils.today(),
+          responses: assessmentResponses,
+          score: percentile
+        };
+        saveState();
+        
+        showScreen('context');
+      } else {
+        showScreen('assessment', { questionIndex: currentQuestionIndex, responses: assessmentResponses });
+      }
+    }
+
+    function prevAssessmentQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        showScreen('assessment', { questionIndex: currentQuestionIndex, responses: assessmentResponses });
+      }
+    }
+
+    function selectEmployment(value) {
+      selectedEmployment = value;
+      document.querySelectorAll('#employment-options .option-item').forEach(el => {
+        el.classList.toggle('selected', el.dataset.value === value);
+        el.querySelector('input').checked = el.dataset.value === value;
+      });
+      
+      // Show work days section for applicable employment types
+      const showWorkDays = ['self-employed', 'between-jobs', 'other'].includes(value);
+      document.getElementById('work-days-section').classList.toggle('hidden', !showWorkDays);
+      
+      if (!showWorkDays) {
+        selectedDaysOff = [0]; // Default Sunday off
+      }
+      
+      checkContextComplete();
+    }
+
+    function toggleDayOff(dayIndex) {
+      const idx = selectedDaysOff.indexOf(dayIndex);
+      if (idx >= 0) {
+        selectedDaysOff.splice(idx, 1);
+      } else if (selectedDaysOff.length < 2) {
+        selectedDaysOff.push(dayIndex);
+      }
+      
+      document.querySelectorAll('#days-off-options .option-item').forEach(el => {
+        const isSelected = selectedDaysOff.includes(parseInt(el.dataset.value));
+        el.classList.toggle('selected', isSelected);
+        el.querySelector('input').checked = isSelected;
+      });
+    }
+
+    function selectSmoking(value) {
+      selectedSmoking = value;
+      document.querySelectorAll('#smoking-options .option-item').forEach(el => {
+        el.classList.toggle('selected', (el.dataset.value === 'yes') === value);
+        el.querySelector('input').checked = (el.dataset.value === 'yes') === value;
+      });
+      checkContextComplete();
+    }
+
+    function selectAlcohol(value) {
+      selectedAlcohol = value;
+      document.querySelectorAll('#alcohol-options .option-item').forEach(el => {
+        el.classList.toggle('selected', (el.dataset.value === 'yes') === value);
+        el.querySelector('input').checked = (el.dataset.value === 'yes') === value;
+      });
+      checkContextComplete();
+    }
+
+    function checkContextComplete() {
+      const complete = selectedEmployment !== null && 
+                      selectedSmoking !== null && 
+                      selectedAlcohol !== null;
+      document.getElementById('context-continue').disabled = !complete;
+    }
+
+    function submitContext() {
+      state.user.employmentStatus = selectedEmployment;
+      state.user.workDaysOff = selectedDaysOff.length > 0 ? selectedDaysOff : [0];
+      state.user.isSmoker = selectedSmoking;
+      state.user.drinksAlcohol = selectedAlcohol;
+      
+      // Determine starting phase
+      const startingPhase = determineStartingPhase(state.assessment.entry.score);
+      state.currentPhase = startingPhase;
+      state.phaseStartDate = DateUtils.today();
+      state.initialized = true;
+      
+      saveState();
+      showScreen('phaseIntro', { phase: startingPhase });
+    }
+
+    function selectFrequency(value) {
+      selectedHabitFrequency = value;
+      document.querySelectorAll('#frequency-options .option-item').forEach(el => {
+        el.classList.toggle('selected', el.dataset.value === value);
+        el.querySelector('input').checked = el.dataset.value === value;
+      });
+    }
+
+    function saveUserHabit() {
+      const name = document.getElementById('habit-name').value.trim();
+      const desc = document.getElementById('habit-desc').value.trim();
+      
+      if (!name || !selectedHabitFrequency) {
+        alert('Please fill in all fields');
+        return;
+      }
+      
+      const currentUserHabits = state.userHabits.filter(h => h.active).length;
+      const maxAllowed = USER_HABITS_ALLOWED[state.currentPhase] || 0;
+      
+      if (currentUserHabits >= maxAllowed) {
+        alert(`You can only have ${maxAllowed} custom habit(s) in this phase.`);
+        return;
+      }
+      
+      const habit = {
+        id: 'user-' + Date.now(),
+        name,
+        description: desc || name,
+        frequency: selectedHabitFrequency,
+        tier: state.currentPhase,
+        isUserDefined: true,
+        active: true,
+        createdAt: DateUtils.today()
+      };
+      
+      state.userHabits.push(habit);
+      saveState();
+      
+      selectedHabitFrequency = null;
+      showScreen('phaseIntro', { phase: state.currentPhase });
+    }
+
+    function startPhase() {
+      state.phaseStartDate = DateUtils.today();
+      state.consecutiveCompliantDays = 0;
+      saveState();
+      showScreen('dashboard');
+    }
+
+    function submitMorningCheckIn() {
+      const today = DateUtils.today();
+      const notes = document.getElementById('morning-notes').value;
+      
+      if (!state.dailyLogs[today]) {
+        state.dailyLogs[today] = { habits: {} };
+      }
+      
+      state.dailyLogs[today].morningCheckIn = {
+        completedAt: new Date().toISOString(),
+        notes
+      };
+      
+      state.lastActiveDate = today;
+      saveState();
+      showScreen('dashboard');
+    }
+
+    function selectHabitStatus(habitId, status) {
+      selectedHabitStatuses[habitId] = status;
+      
+      document.querySelectorAll(`[data-habit="${habitId}"]`).forEach(btn => {
+        btn.classList.remove('done', 'missed', 'excused');
+        if (btn.dataset.status === status) {
+          btn.classList.add(status);
+        }
+      });
+    }
+
+    function submitEveningCheckIn() {
+      const today = DateUtils.today();
+      const habits = getActiveHabits().filter(h => isHabitApplicableToday(h, today));
+      
+      // Check all habits have status
+      const allComplete = habits.every(h => selectedHabitStatuses[h.id]);
+      if (!allComplete) {
+        alert('Please mark all habits before submitting.');
+        return;
+      }
+      
+      if (!state.dailyLogs[today]) {
+        state.dailyLogs[today] = { habits: {} };
+      }
+      
+      habits.forEach(h => {
+        const status = selectedHabitStatuses[h.id];
+        state.dailyLogs[today].habits[h.id] = {
+          status,
+          points: status === 'done' ? calculateHabitPoints(getHabitDayNumber(h.id), true) :
+                  status === 'missed' ? calculateHabitPoints(getHabitDayNumber(h.id), false) : 0
+        };
+      });
+      
+      state.dailyLogs[today].eveningCheckIn = {
+        completedAt: new Date().toISOString()
+      };
+      
+      // Update consecutive compliant days
+      const result = calculateDailyScore(today);
+      const config = PHASE_CONFIG[state.currentPhase];
+      
+      if (result.stability >= config?.complianceRequired) {
+        state.consecutiveCompliantDays++;
+      } else {
+        state.consecutiveCompliantDays = 0;
+      }
+      
+      state.lastActiveDate = today;
+      selectedHabitStatuses = {};
+      saveState();
+      
+      // Check if phase complete or graduated
+      const progress = checkPhaseProgress();
+      if (progress?.canAdvance && state.currentPhase === 4) {
+        // Trigger graduation flow
+        exitQuestionIndex = 0;
+        exitAssessmentResponses = [];
+        showScreen('exitAssessment', { questionIndex: 0 });
+      } else {
+        showScreen('daySummary', { date: today });
+      }
+    }
+
+    function advanceToNextPhase() {
+      advancePhase();
+      showScreen('phaseIntro', { phase: state.currentPhase });
+    }
+
+    // Exit Assessment handlers
+    function selectExitAssessmentOption(value) {
+      document.querySelectorAll('.scale-option').forEach(el => el.classList.remove('selected'));
+      document.querySelector(`.scale-option[data-value="${value}"]`).classList.add('selected');
+      
+      exitAssessmentResponses[exitQuestionIndex] = { 
+        questionId: ASSESSMENT_QUESTIONS[exitQuestionIndex].id, 
+        value 
+      };
+      
+      document.getElementById('next-btn').disabled = false;
+    }
+
+    function nextExitAssessmentQuestion() {
+      exitQuestionIndex++;
+      if (exitQuestionIndex >= ASSESSMENT_QUESTIONS.length) {
+        const rawScore = calculateAssessmentScore(exitAssessmentResponses);
+        const percentile = rawScoreToPercentile(rawScore);
+        
+        state.assessment.exit = {
+          completedAt: DateUtils.today(),
+          responses: exitAssessmentResponses,
+          score: percentile
+        };
+        state.graduated = true;
+        state.graduationDate = DateUtils.today();
+        saveState();
+        
+        showScreen('graduation');
+      } else {
+        showScreen('exitAssessment', { questionIndex: exitQuestionIndex });
+      }
+    }
+
+    function prevExitAssessmentQuestion() {
+      if (exitQuestionIndex > 0) {
+        exitQuestionIndex--;
+        showScreen('exitAssessment', { questionIndex: exitQuestionIndex });
+      }
+    }
+
+    function selectGraduationMode(mode) {
+      selectedGraduationMode = mode;
+      document.querySelectorAll('[name="grad-mode"]').forEach(el => {
+        el.checked = el.value === mode;
+        el.closest('.option-item').classList.toggle('selected', el.value === mode);
+      });
+      document.getElementById('confirm-graduation').disabled = false;
+    }
+
+    function confirmGraduation() {
+      state.graduationMode = selectedGraduationMode;
+      saveState();
+      
+      if (selectedGraduationMode === 'exit') {
+        alert('Congratulations on completing the program! Your data is preserved. You can return anytime.');
+        showScreen('dashboard');
+      } else if (selectedGraduationMode === 'maintenance') {
+        showScreen('dashboard');
+      } else if (selectedGraduationMode === 'advanced') {
+        state.currentPhase = 5; // Advanced mode
+        showScreen('dashboard');
+      }
+    }
+
+    // Settings handlers
+    function exportData() {
+      Storage.export();
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (file) {
+        Storage.import(file).then(data => {
+          state = data;
+          alert('Data imported successfully!');
+          showScreen('dashboard');
+        }).catch(err => {
+          alert('Failed to import data: ' + err.message);
+        });
+      }
+    }
+
+    function confirmReset() {
+      if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+        if (confirm('Really? All your progress will be lost.')) {
+          Storage.clear();
+          state = createInitialState();
+          showScreen('welcome');
+        }
+      }
+    }
+
+    // ===== INITIALIZATION =====
+    function init() {
+      loadState();
+      
+      if (!state.initialized) {
+        showScreen('welcome');
+      } else if (state.graduated && !state.graduationMode) {
+        showScreen('graduation');
+      } else {
+        showScreen('dashboard');
+      }
+    }
+
+    // Start the app
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
