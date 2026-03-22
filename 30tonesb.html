@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>30-EDO Microtonal Keyboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a2e;
+    color: #eee;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.3rem;
+    background: linear-gradient(90deg, #e94560, #0f3460, #16213e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+  }
+  .subtitle {
+    color: #888;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+  .keyboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 25px;
+    background: #16213e;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    border: 1px solid #0f3460;
+  }
+  .row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+  }
+  .row-label {
+    color: #555;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-left: 8px;
+    margin-bottom: 2px;
+  }
+  .key {
+    width: 64px;
+    height: 72px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.06s, box-shadow 0.06s, background 0.06s;
+    user-select: none;
+    position: relative;
+    border: none;
+    outline: none;
+  }
+  .key .letter {
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .key .freq {
+    font-size: 0.65rem;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+  /* Color rows differently */
+  .row-numbers .key {
+    background: linear-gradient(145deg, #533483, #3b1f6e);
+    color: #e0c3fc;
+    box-shadow: 0 4px 8px rgba(83, 52, 131, 0.4);
+  }
+  .row-numbers .key:hover { background: linear-gradient(145deg, #6b44a0, #4a2888); }
+  .row-numbers .key.active {
+    background: linear-gradient(145deg, #9b59b6, #7d3cac);
+    transform: scale(0.95) translateY(2px);
+    box-shadow: 0 1px 4px rgba(83, 52, 131, 0.6), 0 0 20px rgba(155, 89, 182, 0.4);
+  }
+
+  .row-q .key {
+    background: linear-gradient(145deg, #0f3460, #0a2647);
+    color: #a2d2ff;
+    box-shadow: 0 4px 8px rgba(15, 52, 96, 0.4);
+  }
+  .row-q .key:hover { background: linear-gradient(145deg, #154785, #0d3058); }
+  .row-q .key.active {
+    background: linear-gradient(145deg, #2176ff, #1a5fc4);
+    transform: scale(0.95) translateY(2px);
+    box-shadow: 0 1px 4px rgba(15, 52, 96, 0.6), 0 0 20px rgba(33, 118, 255, 0.4);
+  }
+
+  .row-a .key {
+    background: linear-gradient(145deg, #1a5c3a, #134429);
+    color: #a8e6cf;
+    box-shadow: 0 4px 8px rgba(26, 92, 58, 0.4);
+  }
+  .row-a .key:hover { background: linear-gradient(145deg, #21774c, #185a36); }
+  .row-a .key.active {
+    background: linear-gradient(145deg, #27ae60, #1e8c4d);
+    transform: scale(0.95) translateY(2px);
+    box-shadow: 0 1px 4px rgba(26, 92, 58, 0.6), 0 0 20px rgba(39, 174, 96, 0.4);
+  }
+
+  .row-z .key {
+    background: linear-gradient(145deg, #8c2f39, #6b1d27);
+    color: #ffc2c7;
+    box-shadow: 0 4px 8px rgba(140, 47, 57, 0.4);
+  }
+  .row-z .key:hover { background: linear-gradient(145deg, #a83a46, #7e2530); }
+  .row-z .key.active {
+    background: linear-gradient(145deg, #e94560, #c13a52);
+    transform: scale(0.95) translateY(2px);
+    box-shadow: 0 1px 4px rgba(140, 47, 57, 0.6), 0 0 20px rgba(233, 69, 96, 0.4);
+  }
+
+  .active-notes {
+    margin-top: 20px;
+    min-height: 30px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 600px;
+  }
+  .active-note-tag {
+    background: rgba(233, 69, 96, 0.2);
+    border: 1px solid rgba(233, 69, 96, 0.4);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: #e94560;
+    animation: fadeIn 0.15s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .visualizer {
+    margin-top: 15px;
+    width: 500px;
+    height: 80px;
+    border-radius: 10px;
+    background: #0d1b2a;
+    border: 1px solid #1b2838;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+  }
+
+  .instructions {
+    margin-top: 20px;
+    color: #555;
+    font-size: 0.75rem;
+    text-align: center;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<h1>30-EDO Microtonal Keyboard</h1>
+<p class="subtitle">Press and hold keys to play tones • 30 Equal Divisions of the Octave</p>
+
+<div class="keyboard-container">
+  <!-- Number row -->
+  <div class="row-label">Number Row</div>
+  <div class="row row-numbers" id="row-numbers"></div>
+
+  <!-- QWERTY row -->
+  <div class="row-label" style="margin-top:6px">Top Row</div>
+  <div class="row row-q" id="row-q"></div>
+
+  <!-- ASDF row -->
+  <div class="row-label" style="margin-top:6px">Home Row</div>
+  <div class="row row-a" id="row-a"></div>
+
+  <!-- ZXCV row -->
+  <div class="row-label" style="margin-top:6px">Bottom Row</div>
+  <div class="row row-z" id="row-z"></div>
+</div>
+
+<div class="active-notes" id="active-notes"></div>
+
+<div class="visualizer">
+  <canvas id="waveform" width="500" height="80"></canvas>
+</div>
+
+<div class="instructions">
+  Click anywhere first to enable audio • Polyphonic: play multiple keys at once<br>
+  Frequencies span from middle C (262 Hz) up to 524 Hz
+</div>
+
+<script>
+const keyMap = [
+  { key: 'z', freq: 262 },
+  { key: 'x', freq: 268 },
+  { key: 'c', freq: 274 },
+  { key: 'v', freq: 281 },
+  { key: 'b', freq: 287 },
+  { key: 'n', freq: 294 },
+  { key: 'm', freq: 301 },
+  { key: 'a', freq: 308 },
+  { key: 's', freq: 315 },
+  { key: 'd', freq: 323 },
+  { key: 'f', freq: 330 },
+  { key: 'g', freq: 338 },
+  { key: 'h', freq: 346 },
+  { key: 'j', freq: 354 },
+  { key: 'k', freq: 362 },
+  { key: 'l', freq: 371 },
+  { key: 'q', freq: 379 },
+  { key: 'w', freq: 388 },
+  { key: 'e', freq: 397 },
+  { key: 'r', freq: 406 },
+  { key: 't', freq: 416 },
+  { key: 'y', freq: 426 },
+  { key: 'u', freq: 436 },
+  { key: 'i', freq: 446 },
+  { key: 'o', freq: 456 },
+  { key: 'p', freq: 467 },
+  { key: '1', freq: 478 },
+  { key: '2', freq: 489 },
+  { key: '3', freq: 500 },
+  { key: '4', freq: 512 },
+  { key: '5', freq: 524 },
+];
+
+const rows = {
+  'row-z': ['z','x','c','v','b','n','m'],
+  'row-a': ['a','s','d','f','g','h','j','k','l'],
+  'row-q': ['q','w','e','r','t','y','u','i','o','p'],
+  'row-numbers': ['1','2','3','4','5'],
+};
+
+const freqMap = {};
+keyMap.forEach(k => freqMap[k.key] = k.freq);
+
+// Build UI
+Object.entries(rows).forEach(([rowId, keys]) => {
+  const rowEl = document.getElementById(rowId);
+  keys.forEach(k => {
+    const btn = document.createElement('div');
+    btn.className = 'key';
+    btn.id = 'key-' + k;
+    btn.innerHTML = `<span class="letter">${k}</span><span class="freq">${freqMap[k]} Hz</span>`;
+    btn.addEventListener('mousedown', (e) => { e.preventDefault(); startTone(k); });
+    btn.addEventListener('mouseup', () => stopTone(k));
+    btn.addEventListener('mouseleave', () => stopTone(k));
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); startTone(k); });
+    btn.addEventListener('touchend', () => stopTone(k));
+    rowEl.appendChild(btn);
+  });
+});
+
+// Audio
+let audioCtx = null;
+let analyser = null;
+const activeTones = {};
+
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.connect(audioCtx.destination);
+    drawWaveform();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function startTone(key) {
+  ensureAudio();
+  if (activeTones[key]) return;
+
+  const freq = freqMap[key];
+  if (!freq) return;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  // Use a slightly warm waveform
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+  // Add a second oscillator slightly detuned for richness
+  const osc2 = audioCtx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  osc2.detune.setValueAtTime(3, audioCtx.currentTime);
+
+  const gain2 = audioCtx.createGain();
+  gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+
+  gain.gain.setValueAtTime(0, audioCtx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.03);
+
+  osc.connect(gain);
+  osc2.connect(gain2);
+  gain2.connect(gain);
+  gain.connect(analyser);
+
+  osc.start();
+  osc2.start();
+
+  activeTones[key] = { osc, osc2, gain, gain2 };
+
+  // Update UI
+  const el = document.getElementById('key-' + key);
+  if (el) el.classList.add('active');
+  updateActiveNotes();
+}
+
+function stopTone(key) {
+  const tone = activeTones[key];
+  if (!tone) return;
+
+  const now = audioCtx.currentTime;
+  tone.gain.gain.cancelScheduledValues(now);
+  tone.gain.gain.setValueAtTime(tone.gain.gain.value, now);
+  tone.gain.gain.linearRampToValueAtTime(0, now + 0.08);
+
+  setTimeout(() => {
+    try { tone.osc.stop(); } catch(e) {}
+    try { tone.osc2.stop(); } catch(e) {}
+    tone.osc.disconnect();
+    tone.osc2.disconnect();
+    tone.gain.disconnect();
+    tone.gain2.disconnect();
+  }, 100);
+
+  delete activeTones[key];
+
+  const el = document.getElementById('key-' + key);
+  if (el) el.classList.remove('active');
+  updateActiveNotes();
+}
+
+// Keyboard events
+const pressedKeys = new Set();
+
+document.addEventListener('keydown', (e) => {
+  if (e.repeat) return;
+  const k = e.key.toLowerCase();
+  if (freqMap[k] && !pressedKeys.has(k)) {
+    pressedKeys.add(k);
+    startTone(k);
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  const k = e.key.toLowerCase();
+  if (pressedKeys.has(k)) {
+    pressedKeys.delete(k);
+    stopTone(k);
+  }
+});
+
+// Enable audio on any click
+document.addEventListener('click', ensureAudio);
+
+// Active notes display
+function updateActiveNotes() {
+  const container = document.getElementById('active-notes');
+  const keys = Object.keys(activeTones);
+  if (keys.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = keys.map(k =>
+    `<span class="active-note-tag">${k.toUpperCase()} · ${freqMap[k]} Hz</span>`
+  ).join('');
+}
+
+// Waveform visualizer
+const canvas = document.getElementById('waveform');
+const ctx = canvas.getContext('2d');
+
+function drawWaveform() {
+  requestAnimationFrame(drawWaveform);
+
+  if (!analyser) return;
+
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  analyser.getByteTimeDomainData(dataArray);
+
+  ctx.fillStyle = '#0d1b2a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const hasActive = Object.keys(activeTones).length > 0;
+
+  ctx.lineWidth = 2;
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  gradient.addColorStop(0, '#e94560');
+  gradient.addColorStop(0.5, '#0f3460');
+  gradient.addColorStop(1, '#533483');
+  ctx.strokeStyle = hasActive ? gradient : '#1b2838';
+
+  ctx.beginPath();
+  const sliceWidth = canvas.width / bufferLength;
+  let x = 0;
+  for (let i = 0; i < bufferLength; i++) {
+    const v = dataArray[i] / 128.0;
+    const y = (v * canvas.height) / 2;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+    x += sliceWidth;
+  }
+  ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.stroke();
+}
+</script>
+</body>
+</html>
