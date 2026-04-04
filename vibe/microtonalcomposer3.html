@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Microtonal Text-to-Audio Composer</title>
+  <style>
+    :root{
+      --bg: #0f1220;
+      --panel: #171b2e;
+      --panel-2: #1d2340;
+      --text: #eef2ff;
+      --muted: #aeb7d9;
+      --accent: #7c9cff;
+      --accent-2: #65e0b5;
+      --danger: #ff7b8b;
+      --warning: #ffd166;
+      --border: #30385f;
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top right, rgba(124,156,255,.18), transparent 22%),
+        radial-gradient(circle at top left, rgba(101,224,181,.12), transparent 18%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .wrap{
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1,h2,h3{
+      margin:0 0 12px 0;
+      line-height: 1.2;
+    }
+
+    p{ color: var(--muted); line-height: 1.55; }
+
+    .hero{
+      margin-bottom: 20px;
+      padding: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero p{ margin:8px 0 0 0; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .95fr;
+      gap: 20px;
+      align-items:start;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .panel .inner{
+      padding: 18px;
+    }
+
+    .panel + .panel{
+      margin-top: 0;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    textarea{
+      width:100%;
+      min-height: 260px;
+      resize: vertical;
+      background: #0d1020;
+      color: var(--text);
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding:14px;
+      font-family: var(--mono);
+      font-size: 16px;
+      line-height: 1.5;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+
+    textarea:focus{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,156,255,.15);
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .field{
+      background: var(--panel-2);
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .field label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    input[type="number"], select{
+      width:100%;
+      background:#0d1020;
+      color:var(--text);
+      border:1px solid var(--border);
+      border-radius: 10px;
+      padding:10px 12px;
+      font-size:14px;
+      outline:none;
+    }
+
+    input[type="range"]{
+      width:100%;
+      accent-color: var(--accent);
+    }
+
+    .range-value{
+      display:inline-block;
+      margin-top:6px;
+      color: var(--muted);
+      font-size:13px;
+      font-family: var(--mono);
+    }
+
+    .buttons{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top: 14px;
+    }
+
+    button{
+      border:1px solid var(--border);
+      background: #20284a;
+      color:var(--text);
+      padding:10px 14px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight:600;
+      transition: .15s ease;
+    }
+
+    button:hover{ transform: translateY(-1px); border-color: var(--accent); }
+    button:active{ transform: translateY(0); }
+    button.primary{ background: linear-gradient(180deg, #7c9cff, #5f83ff); color:#081127; border-color: transparent; }
+    button.good{ background: linear-gradient(180deg, #65e0b5, #37c48f); color:#071b14; border-color: transparent; }
+    button.warn{ background: linear-gradient(180deg, #ffd166, #ffbc2b); color:#261b00; border-color: transparent; }
+    button.danger{ background: linear-gradient(180deg, #ff8aa0, #ff617f); color:#290510; border-color: transparent; }
+
+    .helper-box{
+      margin-top:16px;
+      padding: 14px;
+      background: rgba(255,255,255,.02);
+      border:1px dashed var(--border);
+      border-radius: 14px;
+    }
+
+    .helper-title{
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 10px;
+    }
+
+    .helper-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom: 10px;
+      align-items:center;
+    }
+
+    .helper-row:last-child{ margin-bottom:0; }
+
+    .helper-label{
+      min-width: 170px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .mini{
+      padding:8px 10px;
+      border-radius: 10px;
+      min-width: 40px;
+      font-family: var(--mono);
+      background:#11162c;
+    }
+
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0,1fr));
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .card{
+      background: var(--panel-2);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .card .k{
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom:6px;
+    }
+
+    .card .v{
+      font-size: 20px;
+      font-weight: 800;
+      font-family: var(--mono);
+    }
+
+    .status{
+      margin-top: 16px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .msg{
+      border-radius: 14px;
+      padding: 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+
+    .msg.ok{
+      border-color: rgba(101,224,181,.35);
+      background: rgba(101,224,181,.08);
+    }
+
+    .msg.err{
+      border-color: rgba(255,123,139,.4);
+      background: rgba(255,123,139,.08);
+    }
+
+    .msg.warn{
+      border-color: rgba(255,209,102,.35);
+      background: rgba(255,209,102,.08);
+    }
+
+    .msg ul{
+      margin:8px 0 0 18px;
+      color: var(--text);
+    }
+
+    .rules{
+      display:grid;
+      gap:14px;
+    }
+
+    .note-box{
+      padding: 14px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: var(--panel-2);
+    }
+
+    .note-box h3{
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .note-box ul{
+      margin: 8px 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .callout{
+      padding: 14px;
+      border-radius: 14px;
+      border:1px solid rgba(255,209,102,.4);
+      background: rgba(255,209,102,.08);
+      color: #fff4cf;
+    }
+
+    .tables{
+      display:grid;
+      gap:12px;
+      margin-top: 10px;
+    }
+
+    .pitch-block{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      overflow:hidden;
+      background: var(--panel-2);
+    }
+
+    .pitch-head{
+      padding: 10px 12px;
+      font-weight:700;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+
+    .pitch-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .pitch-item{
+      border:1px solid rgba(255,255,255,.06);
+      background:#11162c;
+      border-radius: 10px;
+      padding: 8px;
+      text-align:center;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .pitch-item .sym{
+      display:block;
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .pitch-item .hz{
+      color: var(--muted);
+    }
+
+    .preview-table-wrap{
+      margin-top: 12px;
+      overflow:auto;
+      border-radius: 14px;
+      border:1px solid var(--border);
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 860px;
+      background: #0f1327;
+    }
+
+    th, td{
+      padding: 10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      text-align:left;
+      font-size: 14px;
+    }
+
+    th{
+      background: #182042;
+      color: var(--text);
+      position: sticky;
+      top:0;
+      z-index:1;
+    }
+
+    td{
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .symbol{
+      color: var(--text);
+      font-weight:700;
+      font-family: var(--mono);
+    }
+
+    .tag{
+      display:inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight:700;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      font-family: var(--sans);
+    }
+
+    .tag.note{ background: rgba(124,156,255,.13); border-color: rgba(124,156,255,.35); }
+    .tag.rest{ background: rgba(101,224,181,.12); border-color: rgba(101,224,181,.35); }
+
+    code, .code{
+      font-family: var(--mono);
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius: 8px;
+      padding: 2px 6px;
+      color: #fff;
+    }
+
+    .small{
+      font-size:13px;
+      color: var(--muted);
+    }
+
+    .footer-note{
+      margin-top: 12px;
+      font-size:13px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1100px){
+      .grid{
+        grid-template-columns: 1fr;
+      }
+      .cards{
+        grid-template-columns: repeat(2, minmax(0,1fr));
+      }
+      .controls{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px){
+      .wrap{ padding: 14px; }
+      .cards{
+        grid-template-columns: 1fr;
+      }
+      .helper-label{
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>Microtonal Text-to-Audio Composer</h1>
+      <p>
+        Type a score as text, where every letter becomes a pitch and spaces become rests.
+        The app parses your notation, plays it in the browser, and can export it as a WAV file.
+      </p>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="panel">
+          <div class="inner">
+            <div class="section-title">
+              <h2>Composer</h2>
+            </div>
+
+            <textarea id="score" spellcheck="false" placeholder="Type your microtonal score here..."></textarea>
+
+            <div class="controls">
+              <div class="field">
+                <label for="bpm">Tempo (quarter-note BPM)</label>
+                <input id="bpm" type="number" min="20" max="400" step="1" value="120" />
+              </div>
+
+              <div class="field">
+                <label for="waveform">Waveform</label>
+                <select id="waveform">
+                  <option value="sine">Sine</option>
+                  <option value="triangle" selected>Triangle</option>
+                  <option value="sawtooth">Sawtooth</option>
+                  <option value="square">Square</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="volume">Volume</label>
+                <input id="volume" type="range" min="0.02" max="0.8" step="0.01" value="0.22" />
+                <div class="range-value" id="volumeValue">0.22</div>
+              </div>
+            </div>
+
+            <div class="buttons">
+              <button class="primary" id="parseBtn">Parse / Refresh</button>
+              <button class="good" id="playBtn">Play</button>
+              <button class="danger" id="stopBtn">Stop</button>
+              <button class="warn" id="downloadBtn">Download WAV</button>
+              <button id="scaleDemoBtn">Load Scale Demo</button>
+              <button id="rhythmDemoBtn">Load Rhythm Demo</button>
+              <button id="clearBtn">Clear</button>
+            </div>
+
+            <div class="helper-box">
+              <div class="helper-title">Quick Insert Helpers</div>
+
+              <div class="helper-row">
+                <div class="helper-label">Main octave Cyrillic lowercase</div>
+                <div id="cyrLowerHelpers"></div>
+              </div>
+
+              <div class="helper-row">
+                <div class="helper-label">Main octave Cyrillic uppercase</div>
+                <div id="cyrUpperHelpers"></div>
+              </div>
+
+              <div class="helper-row">
+                <div class="helper-label">Modifiers and rests</div>
+                <div id="symbolHelpers"></div>
+              </div>
+
+              <div class="footer-note">
+                Tip: Latin letters can be typed on a normal keyboard. Use the buttons above if you need quick access to Cyrillic symbols.
+              </div>
+            </div>
+
+            <div class="cards" id="summaryCards">
+              <div class="card"><div class="k">Events</div><div class="v">0</div></div>
+              <div class="card"><div class="k">Notes</div><div class="v">0</div></div>
+              <div class="card"><div class="k">Rests</div><div class="v">0</div></div>
+              <div class="card"><div class="k">Total Beats</div><div class="v">0</div></div>
+              <div class="card"><div class="k">Duration</div><div class="v">0:00</div></div>
+            </div>
+
+            <div class="status">
+              <div id="statusBox" class="msg warn">
+                Enter a score to begin.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:20px;">
+          <div class="inner">
+            <div class="section-title">
+              <h2>Parsed Event Preview</h2>
+              <div class="small">Spaces are shown as <span class="code">␠</span> in the preview.</div>
+            </div>
+
+            <div class="preview-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Symbol</th>
+                    <th>Type</th>
+                    <th>Pitch</th>
+                    <th>Frequency</th>
+                    <th>Duration</th>
+                    <th>Beats</th>
+                    <th>Start</th>
+                    <th>Length</th>
+                  </tr>
+                </thead>
+                <tbody id="previewBody">
+                  <tr>
+                    <td colspan="9" style="color:var(--muted);font-family:var(--sans);">No events yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="footer-note" id="previewNote"></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="inner">
+            <div class="section-title">
+              <h2>Rules</h2>
+            </div>
+
+            <div class="rules">
+              <div class="callout">
+                <strong>Important:</strong> Latin <span class="code">A</span> is <em>not</em> the same character as Cyrillic <span class="code">А</span>.
+                Latin <span class="code">A</span> = 523 Hz, while Cyrillic <span class="code">А</span> = 262 Hz.
+              </div>
+
+              <div class="note-box">
+                <h3>Pitch system</h3>
+                <p>
+                  The main octave is a <strong>30-tone microtonal octave</strong> from approximately C4 to C5, written with
+                  <strong>Cyrillic letters</strong>. Additional <strong>Latin letters</strong> extend the range below and above the main octave.
+                </p>
+                <ul>
+                  <li><strong>Lower extension:</strong> Latin <span class="code">N–Z</span></li>
+                  <li><strong>Main octave:</strong> Cyrillic <span class="code">А–Ш</span></li>
+                  <li><strong>Upper extension:</strong> Latin <span class="code">A–M</span></li>
+                </ul>
+              </div>
+
+              <div class="note-box">
+                <h3>Duration rules for notes</h3>
+                <ul>
+                  <li><strong>lowercase note</strong> = eighth note</li>
+                  <li><strong>UPPERCASE note</strong> = quarter note</li>
+                  <li><strong>UPPERCASE +</strong> = half note</li>
+                  <li><strong>UPPERCASE ++</strong> = whole note</li>
+                  <li><strong>lowercase -</strong> = sixteenth note</li>
+                  <li><strong>lowercase --</strong> = thirty-second note</li>
+                </ul>
+                <p>
+                  Examples: <span class="code">б--</span>, <span class="code">б-</span>, <span class="code">б</span>, <span class="code">Б</span>, <span class="code">Б+</span>, <span class="code">Б++</span>
+                </p>
+              </div>
+
+              <div class="note-box">
+                <h3>Duration rules for rests</h3>
+                <ul>
+                  <li><strong>1 space</strong> = eighth rest</li>
+                  <li><strong>2 spaces</strong> = quarter rest</li>
+                  <li><strong>1 space + -</strong> = sixteenth rest</li>
+                  <li><strong>1 space + --</strong> = thirty-second rest</li>
+                  <li><strong>2 spaces + +</strong> = half rest</li>
+                  <li><strong>2 spaces + ++</strong> = whole rest</li>
+                </ul>
+                <p>
+                  Visible examples (for explanation only):<br>
+                  <span class="code">␠--</span>, <span class="code">␠-</span>, <span class="code">␠</span>, <span class="code">␠␠</span>, <span class="code">␠␠+</span>, <span class="code">␠␠++</span><br>
+                  <span class="small">You must type real spaces, not the visible ␠ symbol.</span>
+                </p>
+              </div>
+
+              <div class="note-box">
+                <h3>Dotted values</h3>
+                <p>
+                  Add a dot <span class="code">.</span> after the complete symbol to make it dotted.
+                </p>
+                <ul>
+                  <li><span class="code">Б+.</span> = dotted half note</li>
+                  <li><span class="code">б-.</span> = dotted sixteenth note</li>
+                  <li><span class="code">␠␠+.</span> = dotted half rest</li>
+                </ul>
+              </div>
+
+              <div class="note-box">
+                <h3>Formatting tips</h3>
+                <ul>
+                  <li>Write notes back-to-back if you do <em>not</em> want rests between them.</li>
+                  <li>Normal spaces are musical rests, so do not use spaces as simple separators.</li>
+                  <li>Commas, semicolons, vertical bars, tabs, and line breaks are ignored.</li>
+                  <li>If you put a normal space after a comma, that space still counts as a rest.</li>
+                </ul>
+              </div>
+
+              <div class="tables" id="pitchTables"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const lowerRegister = [
+      ["N",194],["O",198],["P",203],["Q",208],["R",213],["S",217],["T",223],
+      ["U",228],["V",233],["W",239],["X",244],["Y",250],["Z",256]
+    ];
+
+    const mainRegister = [
+      ["А",262],["Б",268],["В",274],["Г",280],["Д",287],["Ђ",294],["Е",301],["Ж",308],["З",315],["И",322],
+      ["Ј",330],["К",337],["Л",345],["Љ",353],["М",362],["Н",370],["Њ",379],["О",387],["П",397],["Р",406],
+      ["С",415],["Т",425],["Ћ",435],["У",445],["Ф",456],["Х",466],["Ц",477],["Ч",488],["Џ",500],["Ш",511]
+    ];
+
+    const upperRegister = [
+      ["A",523],["B",535],["C",548],["D",561],["E",574],["F",587],["G",601],
+      ["H",615],["I",629],["J",644],["K",659],["L",675],["M",690]
+    ];
+
+    const PITCH_MAP = Object.fromEntries([...lowerRegister, ...mainRegister, ...upperRegister]);
+
+    const REGISTER_MAP = {};
+    lowerRegister.forEach(([s]) => REGISTER_MAP[s] = "Lower extension (Latin N–Z)");
+    mainRegister.forEach(([s]) => REGISTER_MAP[s] = "Main octave (Cyrillic)");
+    upperRegister.forEach(([s]) => REGISTER_MAP[s] = "Upper extension (Latin A–M)");
+
+    const IGNORED_CHARS = new Set([",", ";", "|", "\n", "\r", "\t"]);
+
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const OfflineAudioContextClass = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+
+    let audioCtx = null;
+    let activeCleanup = [];
+    let playTimer = null;
+    let lastParsed = null;
+
+    const el = {
+      score: document.getElementById("score"),
+      bpm: document.getElementById("bpm"),
+      waveform: document.getElementById("waveform"),
+      volume: document.getElementById("volume"),
+      volumeValue: document.getElementById("volumeValue"),
+      parseBtn: document.getElementById("parseBtn"),
+      playBtn: document.getElementById("playBtn"),
+      stopBtn: document.getElementById("stopBtn"),
+      downloadBtn: document.getElementById("downloadBtn"),
+      scaleDemoBtn: document.getElementById("scaleDemoBtn"),
+      rhythmDemoBtn: document.getElementById("rhythmDemoBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+      summaryCards: document.getElementById("summaryCards"),
+      statusBox: document.getElementById("statusBox"),
+      previewBody: document.getElementById("previewBody"),
+      previewNote: document.getElementById("previewNote"),
+      pitchTables: document.getElementById("pitchTables"),
+      cyrLowerHelpers: document.getElementById("cyrLowerHelpers"),
+      cyrUpperHelpers: document.getElementById("cyrUpperHelpers"),
+      symbolHelpers: document.getElementById("symbolHelpers")
+    };
+
+    function isCasedLetter(ch){
+      return ch && ch.toLowerCase() !== ch.toUpperCase();
+    }
+
+    function isUpperCaseChar(ch){
+      return isCasedLetter(ch) && ch === ch.toUpperCase();
+    }
+
+    function isLowerCaseChar(ch){
+      return isCasedLetter(ch) && ch === ch.toLowerCase();
+    }
+
+    function normalizePitchChar(ch){
+      return ch.toUpperCase();
+    }
+
+    function isMappedPitch(ch){
+      return Object.prototype.hasOwnProperty.call(PITCH_MAP, normalizePitchChar(ch));
+    }
+
+    function visibleSymbol(symbol){
+      return symbol.replace(/ /g, "␠");
+    }
+
+    function clamp(n, min, max){
+      return Math.min(max, Math.max(min, n));
+    }
+
+    function getSettings(){
+      const bpm = clamp(parseFloat(el.bpm.value) || 120, 20, 400);
+      const volume = clamp(parseFloat(el.volume.value) || 0.22, 0.02, 0.8);
+      const waveform = el.waveform.value || "triangle";
+      return { bpm, volume, waveform };
+    }
+
+    function formatSeconds(sec){
+      const total = Math.max(0, sec);
+      const mins = Math.floor(total / 60);
+      const secs = (total % 60).toFixed(2).padStart(5, "0");
+      return `${mins}:${secs}`;
+    }
+
+    function durationName(beats){
+      const map = {
+        0.125: "32nd",
+        0.1875: "dotted 32nd",
+        0.25: "16th",
+        0.375: "dotted 16th",
+        0.5: "eighth",
+        0.75: "dotted eighth",
+        1: "quarter",
+        1.5: "dotted quarter",
+        2: "half",
+        3: "dotted half",
+        4: "whole",
+        6: "dotted whole"
+      };
+      const keys = Object.keys(map).map(Number);
+      for (const k of keys){
+        if (Math.abs(beats - k) < 1e-9) return map[k];
+      }
+      return `${beats} beats`;
+    }
+
+    function buildPitchTables(){
+      const blocks = [
+        { title: "Lower extension: Latin N–Z", data: lowerRegister },
+        { title: "Main octave: Cyrillic А–Ш", data: mainRegister },
+        { title: "Upper extension: Latin A–M", data: upperRegister }
+      ];
+
+      el.pitchTables.innerHTML = blocks.map(block => `
+        <div class="pitch-block">
+          <div class="pitch-head">${block.title}</div>
+          <div class="pitch-grid">
+            ${block.data.map(([sym, hz]) => `
+              <div class="pitch-item">
+                <span class="sym">${sym}</span>
+                <span class="hz">${hz} Hz</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function helperButton(label, value, title){
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "mini";
+      btn.textContent = label;
+      if (title) btn.title = title;
+      btn.addEventListener("click", () => insertAtCursor(value));
+      return btn;
+    }
+
+    function buildHelpers(){
+      const cyrLower = "абвгдђежзијклљмнњопрстћуфхцчџш".split("");
+      const cyrUpper = "АБВГДЂЕЖЗИЈКЛЉМНЊОПРСТЋУФХЦЧЏШ".split("");
+
+      cyrLower.forEach(ch => el.cyrLowerHelpers.appendChild(helperButton(ch, ch, `Insert ${ch}`)));
+      cyrUpper.forEach(ch => el.cyrUpperHelpers.appendChild(helperButton(ch, ch, `Insert ${ch}`)));
+
+      const symbolButtons = [
+        ["-", "-", "Insert -"],
+        ["--", "--", "Insert --"],
+        ["+", "+", "Insert +"],
+        ["++", "++", "Insert ++"],
+        [".", ".", "Insert dot"],
+        ["space", " ", "Insert one space rest"],
+        ["2 spaces", "  ", "Insert two-space rest"]
+      ];
+
+      symbolButtons.forEach(([label, value, title]) => {
+        el.symbolHelpers.appendChild(helperButton(label, value, title));
+      });
+    }
+
+    function insertAtCursor(text){
+      const ta = el.score;
+      ta.focus();
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      ta.setRangeText(text, start, end, "end");
+      scheduleAnalysis();
+    }
+
+    function parseRest(text, index){
+      const twoSpaces = text[index + 1] === " ";
+      const baseSpaces = twoSpaces ? 2 : 1;
+      let j = index + baseSpaces;
+      let beats = 0;
+      let symbol = " ".repeat(baseSpaces);
+
+      if (baseSpaces === 1){
+        if (text.startsWith("--", j)){
+          beats = 0.125;
+          symbol += "--";
+          j += 2;
+        } else if (text[j] === "-"){
+          beats = 0.25;
+          symbol += "-";
+          j += 1;
+        } else if (text.startsWith("++", j) || text[j] === "+"){
+          const bad = text.startsWith("++", j) ? "++" : "+";
+          return {
+            event: null,
+            nextIndex: j + bad.length,
+            error: {
+              index: j,
+              message: `A one-space rest cannot use "${bad}". One-space rests allow: no modifier, "-", or "--".`
+            }
+          };
+        } else {
+          beats = 0.5;
+        }
+      } else {
+        if (text.startsWith("++", j)){
+          beats = 4;
+          symbol += "++";
+          j += 2;
+        } else if (text[j] === "+"){
+          beats = 2;
+          symbol += "+";
+          j += 1;
+        } else if (text.startsWith("--", j) || text[j] === "-"){
+          const bad = text.startsWith("--", j) ? "--" : "-";
+          return {
+            event: null,
+            nextIndex: j + bad.length,
+            error: {
+              index: j,
+              message: `A two-space rest cannot use "${bad}". Two-space rests allow: no modifier, "+", or "++".`
+            }
+          };
+        } else {
+          beats = 1;
+        }
+      }
+
+      if (text[j] === "."){
+        beats *= 1.5;
+        symbol += ".";
+        j += 1;
+      }
+
+      return {
+        event: {
+          type: "rest",
+          symbol,
+          displaySymbol: visibleSymbol(symbol),
+          beats
+        },
+        nextIndex: j
+      };
+    }
+
+    function parseNote(text, index){
+      const ch = text[index];
+      const pitch = normalizePitchChar(ch);
+
+      if (!isMappedPitch(ch)){
+        return {
+          event: null,
+          nextIndex: index + 1,
+          error: {
+            index,
+            message: `Unsupported pitch symbol "${ch}".`
+          }
+        };
+      }
+
+      const upper = isUpperCaseChar(ch);
+      const lower = isLowerCaseChar(ch);
+      let j = index + 1;
+      let beats = 0;
+      let symbol = ch;
+
+      if (upper){
+        if (text.startsWith("++", j)){
+          beats = 4;
+          symbol += "++";
+          j += 2;
+        } else if (text[j] === "+"){
+          beats = 2;
+          symbol += "+";
+          j += 1;
+        } else if (text.startsWith("--", j) || text[j] === "-"){
+          const bad = text.startsWith("--", j) ? "--" : "-";
+          return {
+            event: null,
+            nextIndex: j + bad.length,
+            error: {
+              index: j,
+              message: `Uppercase note "${ch}" cannot use "${bad}". Uppercase notes allow: no modifier, "+", or "++".`
+            }
+          };
+        } else {
+          beats = 1;
+        }
+      } else if (lower){
+        if (text.startsWith("--", j)){
+          beats = 0.125;
+          symbol += "--";
+          j += 2;
+        } else if (text[j] === "-"){
+          beats = 0.25;
+          symbol += "-";
+          j += 1;
+        } else if (text.startsWith("++", j) || text[j] === "+"){
+          const bad = text.startsWith("++", j) ? "++" : "+";
+          return {
+            event: null,
+            nextIndex: j + bad.length,
+            error: {
+              index: j,
+              message: `Lowercase note "${ch}" cannot use "${bad}". Lowercase notes allow: no modifier, "-", or "--".`
+            }
+          };
+        } else {
+          beats = 0.5;
+        }
+      } else {
+        return {
+          event: null,
+          nextIndex: index + 1,
+          error: {
+            index,
+            message: `Character "${ch}" is not a valid cased letter.`
+          }
+        };
+      }
+
+      if (text[j] === "."){
+        beats *= 1.5;
+        symbol += ".";
+        j += 1;
+      }
+
+      return {
+        event: {
+          type: "note",
+          symbol,
+          displaySymbol: visibleSymbol(symbol),
+          pitch,
+          register: REGISTER_MAP[pitch] || "Unknown",
+          freq: PITCH_MAP[pitch],
+          beats
+        },
+        nextIndex: j
+      };
+    }
+
+    function parseScore(text){
+      const events = [];
+      const errors = [];
+      let i = 0;
+
+      while (i < text.length){
+        const ch = text[i];
+
+        if (IGNORED_CHARS.has(ch)){
+          i += 1;
+          continue;
+        }
+
+        if (ch === " "){
+          const result = parseRest(text, i);
+          if (result.error) errors.push(result.error);
+          if (result.event) events.push(result.event);
+          i = result.nextIndex;
+          continue;
+        }
+
+        if (isMappedPitch(ch)){
+          const result = parseNote(text, i);
+          if (result.error) errors.push(result.error);
+          if (result.event) events.push(result.event);
+          i = result.nextIndex;
+          continue;
+        }
+
+        if (ch === "+" || ch === "-" || ch === "."){
+          errors.push({
+            index: i,
+            message: `Stray "${ch}" found without a valid note/rest before it.`
+          });
+          i += 1;
+          continue;
+        }
+
+        errors.push({
+          index: i,
+          message: `Unsupported character "${ch}".`
+        });
+        i += 1;
+      }
+
+      const notes = events.filter(e => e.type === "note").length;
+      const rests = events.filter(e => e.type === "rest").length;
+      const totalBeats = events.reduce((sum, e) => sum + e.beats, 0);
+
+      return { events, errors, notes, rests, totalBeats };
+    }
+
+    function decorateEvents(events, bpm){
+      const secPerBeat = 60 / bpm;
+      let beatCursor = 0;
+      let secCursor = 0;
+
+      return events.map((ev, idx) => {
+        const item = {
+          ...ev,
+          index: idx + 1,
+          startBeats: beatCursor,
+          startSeconds: secCursor,
+          seconds: ev.beats * secPerBeat,
+          durationLabel: durationName(ev.beats)
+        };
+        beatCursor += ev.beats;
+        secCursor += ev.beats * secPerBeat;
+        return item;
+      });
+    }
+
+    function renderSummary(parsed){
+      const { bpm } = getSettings();
+      const totalSeconds = parsed.totalBeats * 60 / bpm;
+
+      el.summaryCards.innerHTML = `
+        <div class="card"><div class="k">Events</div><div class="v">${parsed.events.length}</div></div>
+        <div class="card"><div class="k">Notes</div><div class="v">${parsed.notes}</div></div>
+        <div class="card"><div class="k">Rests</div><div class="v">${parsed.rests}</div></div>
+        <div class="card"><div class="k">Total Beats</div><div class="v">${parsed.totalBeats.toFixed(3).replace(/\.000$/, "")}</div></div>
+        <div class="card"><div class="k">Duration</div><div class="v">${formatSeconds(totalSeconds)}</div></div>
+      `;
+    }
+
+    function renderStatus(parsed){
+      if (!el.score.value.trim() && !el.score.value.includes(" ")){
+        el.statusBox.className = "msg warn";
+        el.statusBox.innerHTML = `Enter a score to begin.`;
+        return;
+      }
+
+      if (parsed.errors.length){
+        el.statusBox.className = "msg err";
+        el.statusBox.innerHTML = `
+          <strong>${parsed.errors.length} parse error(s)</strong>
+          <ul>
+            ${parsed.errors.slice(0, 12).map(err => `
+              <li>
+                Character ${err.index + 1}: ${err.message}
+              </li>
+            `).join("")}
+            ${parsed.errors.length > 12 ? `<li>...and ${parsed.errors.length - 12} more</li>` : ""}
+          </ul>
+        `;
+      } else if (parsed.events.length === 0){
+        el.statusBox.className = "msg warn";
+        el.statusBox.innerHTML = `No playable symbols found.`;
+      } else {
+        el.statusBox.className = "msg ok";
+        el.statusBox.innerHTML = `
+          <strong>Parse successful.</strong><br>
+          ${parsed.notes} note(s), ${parsed.rests} rest(s), ${parsed.events.length} total event(s).
+        `;
+      }
+    }
+
+    function renderPreview(parsed){
+      const { bpm } = getSettings();
+      const decorated = decorateEvents(parsed.events, bpm);
+      const maxRows = 250;
+
+      if (!decorated.length){
+        el.previewBody.innerHTML = `
+          <tr>
+            <td colspan="9" style="color:var(--muted);font-family:var(--sans);">No events yet.</td>
+          </tr>
+        `;
+        el.previewNote.textContent = "";
+        return;
+      }
+
+      el.previewBody.innerHTML = decorated.slice(0, maxRows).map(ev => `
+        <tr>
+          <td>${ev.index}</td>
+          <td class="symbol">${ev.displaySymbol}</td>
+          <td>
+            <span class="tag ${ev.type}">
+              ${ev.type === "note" ? "Note" : "Rest"}
+            </span>
+          </td>
+          <td>${ev.type === "note" ? `${ev.pitch} · ${ev.register}` : "—"}</td>
+          <td>${ev.type === "note" ? `${ev.freq} Hz` : "—"}</td>
+          <td>${ev.durationLabel}</td>
+          <td>${ev.beats}</td>
+          <td>${formatSeconds(ev.startSeconds)}</td>
+          <td>${formatSeconds(ev.seconds)}</td>
+        </tr>
+      `).join("");
+
+      el.previewNote.textContent =
+        decorated.length > maxRows
+          ? `Showing first ${maxRows} of ${decorated.length} events.`
+          : `Showing all ${decorated.length} events.`;
+    }
+
+    function analyzeAndRender(){
+      const parsed = parseScore(el.score.value);
+      lastParsed = parsed;
+      renderSummary(parsed);
+      renderStatus(parsed);
+      renderPreview(parsed);
+      return parsed;
+    }
+
+    let analysisTimer = null;
+    function scheduleAnalysis(){
+      clearTimeout(analysisTimer);
+      analysisTimer = setTimeout(analyzeAndRender, 100);
+    }
+
+    async function ensureAudioContext(){
+      if (!AudioContextClass){
+        throw new Error("Web Audio API is not supported in this browser.");
+      }
+      if (!audioCtx){
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx.state === "suspended"){
+        await audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function scheduleSequence(ctx, destination, events, settings, startTime = 0){
+      const secPerBeat = 60 / settings.bpm;
+      let cursor = 0;
+      const cleanup = [];
+
+      for (const ev of events){
+        const dur = ev.beats * secPerBeat;
+
+        if (ev.type === "note"){
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          const attack = Math.min(0.01, Math.max(0.002, dur * 0.15));
+          const release = Math.min(0.04, Math.max(0.005, dur * 0.18));
+          const noteStart = startTime + cursor;
+          const noteEnd = noteStart + dur;
+          const sustainPoint = Math.max(noteStart + attack, noteEnd - release);
+
+          osc.type = settings.waveform;
+          osc.frequency.setValueAtTime(ev.freq, noteStart);
+
+          gain.gain.setValueAtTime(0.0001, noteStart);
+          gain.gain.linearRampToValueAtTime(settings.volume, noteStart + attack);
+          gain.gain.setValueAtTime(settings.volume, sustainPoint);
+          gain.gain.linearRampToValueAtTime(0.0001, noteEnd);
+
+          osc.connect(gain);
+          gain.connect(destination);
+
+          osc.start(noteStart);
+          osc.stop(noteEnd + 0.05);
+
+          cleanup.push(() => {
+            try { osc.stop(); } catch(e) {}
+            try { osc.disconnect(); } catch(e) {}
+            try { gain.disconnect(); } catch(e) {}
+          });
+        }
+
+        cursor += dur;
+      }
+
+      return { totalSeconds: cursor, cleanup };
+    }
+
+    function stopPlayback(){
+      if (playTimer){
+        clearTimeout(playTimer);
+        playTimer = null;
+      }
+      activeCleanup.forEach(fn => {
+        try { fn(); } catch(e) {}
+      });
+      activeCleanup = [];
+    }
+
+    async function playScore(){
+      const parsed = analyzeAndRender();
+      if (parsed.errors.length || !parsed.events.length) return;
+
+      try{
+        stopPlayback();
+        const ctx = await ensureAudioContext();
+        const settings = getSettings();
+        const master = ctx.createGain();
+        master.gain.value = 1;
+        master.connect(ctx.destination);
+
+        const startTime = ctx.currentTime + 0.03;
+        const { totalSeconds, cleanup } = scheduleSequence(ctx, master, parsed.events, settings, startTime);
+
+        activeCleanup = [
+          ...cleanup,
+          () => { try { master.disconnect(); } catch(e) {} }
+        ];
+
+        playTimer = setTimeout(stopPlayback, (totalSeconds + 0.25) * 1000);
+      } catch(err){
+        alert("Playback error: " + err.message);
+      }
+    }
+
+    function audioBufferToWav(buffer){
+      const numChannels = buffer.numberOfChannels;
+      const sampleRate = buffer.sampleRate;
+      const bitDepth = 16;
+      const bytesPerSample = bitDepth / 8;
+      const blockAlign = numChannels * bytesPerSample;
+      const dataLength = buffer.length * blockAlign;
+      const arrayBuffer = new ArrayBuffer(44 + dataLength);
+      const view = new DataView(arrayBuffer);
+
+      function writeString(offset, str){
+        for (let i = 0; i < str.length; i++){
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      }
+
+      writeString(0, "RIFF");
+      view.setUint32(4, 36 + dataLength, true);
+      writeString(8, "WAVE");
+      writeString(12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * blockAlign, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitDepth, true);
+      writeString(36, "data");
+      view.setUint32(40, dataLength, true);
+
+      const channels = [];
+      for (let ch = 0; ch < numChannels; ch++){
+        channels.push(buffer.getChannelData(ch));
+      }
+
+      let offset = 44;
+      for (let i = 0; i < buffer.length; i++){
+        for (let ch = 0; ch < numChannels; ch++){
+          let sample = channels[ch][i];
+          sample = Math.max(-1, Math.min(1, sample));
+          view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          offset += 2;
+        }
+      }
+
+      return new Blob([arrayBuffer], { type: "audio/wav" });
+    }
+
+    async function downloadWav(){
+      const parsed = analyzeAndRender();
+      if (parsed.errors.length || !parsed.events.length) return;
+
+      if (!OfflineAudioContextClass){
+        alert("Offline WAV rendering is not supported in this browser.");
+        return;
+      }
+
+      const originalText = el.downloadBtn.textContent;
+      el.downloadBtn.disabled = true;
+      el.downloadBtn.textContent = "Rendering...";
+
+      try{
+        const settings = getSettings();
+        const sampleRate = 44100;
+        const totalSeconds = parsed.totalBeats * 60 / settings.bpm + 0.1;
+        const frameCount = Math.ceil(totalSeconds * sampleRate);
+
+        const offline = new OfflineAudioContextClass(1, frameCount, sampleRate);
+        const master = offline.createGain();
+        master.gain.value = 1;
+        master.connect(offline.destination);
+
+        scheduleSequence(offline, master, parsed.events, settings, 0);
+        const rendered = await offline.startRendering();
+        const wavBlob = audioBufferToWav(rendered);
+
+        const url = URL.createObjectURL(wavBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `microtonal-score-${Date.now()}.wav`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+      } catch(err){
+        alert("WAV export error: " + err.message);
+      } finally {
+        el.downloadBtn.disabled = false;
+        el.downloadBtn.textContent = originalText;
+      }
+    }
+
+    function loadScaleDemo(){
+      el.score.value =
+        "nopqrstuvwxyz\n" +
+        "абвгдђежзијклљмнњопрстћуфхцчџш\n" +
+        "abcdefghijklm";
+      analyzeAndRender();
+    }
+
+    function loadRhythmDemo(){
+      el.score.value =
+        "б--б-бББ+Б++" +
+        "  +" +
+        "в.г-дђеЖ+Ш++A.b-c--";
+      analyzeAndRender();
+    }
+
+    function clearScore(){
+      stopPlayback();
+      el.score.value = "";
+      analyzeAndRender();
+      el.score.focus();
+    }
+
+    el.volume.addEventListener("input", () => {
+      el.volumeValue.textContent = Number(el.volume.value).toFixed(2);
+      scheduleAnalysis();
+    });
+
+    el.score.addEventListener("input", scheduleAnalysis);
+    el.bpm.addEventListener("input", scheduleAnalysis);
+    el.waveform.addEventListener("change", scheduleAnalysis);
+
+    el.parseBtn.addEventListener("click", analyzeAndRender);
+    el.playBtn.addEventListener("click", playScore);
+    el.stopBtn.addEventListener("click", stopPlayback);
+    el.downloadBtn.addEventListener("click", downloadWav);
+    el.scaleDemoBtn.addEventListener("click", loadScaleDemo);
+    el.rhythmDemoBtn.addEventListener("click", loadRhythmDemo);
+    el.clearBtn.addEventListener("click", clearScore);
+
+    buildPitchTables();
+    buildHelpers();
+    analyzeAndRender();
+  </script>
+</body>
+</html>
