@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Earth Gravity Simulator — Inside &amp; Outside</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{--bg:#060B18;--fg:#D0DCE8;--muted:#5A7088;--accent:#00E5A0;--accent2:#00B87A;--card:rgba(10,18,35,0.92);--border:rgba(80,120,160,0.22)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--fg);overflow:hidden;height:100vh;width:100vw;cursor:crosshair;user-select:none}
+canvas{display:block;position:absolute;top:0;left:0}
+.panel{position:absolute;background:var(--card);border:1px solid var(--border);border-radius:10px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:14px 18px;pointer-events:auto;z-index:10}
+.panel h3{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.6px;color:var(--muted);margin-bottom:8px}
+.label-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:13px}
+.label-row .lbl{color:var(--muted);font-weight:400}
+.label-row .val{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums;text-align:right}
+.accent{color:var(--accent)!important}
+#topBar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:10px 20px;white-space:nowrap}
+#topBar .time-val{font-size:20px;font-weight:700;color:#fff;min-width:180px;text-align:center}
+.ctrl-btn{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--fg);border-radius:6px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .15s}
+.ctrl-btn:hover{background:rgba(0,229,160,0.15);border-color:var(--accent)}
+.ctrl-btn.active{background:rgba(0,229,160,0.2);border-color:var(--accent);color:var(--accent)}
+#infoPanel{top:14px;left:14px;width:225px}
+#legendPanel{top:14px;right:14px;width:195px}
+#legendPanel .legend-item{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px}
+#legendPanel .legend-swatch{width:20px;height:8px;border-radius:2px;flex-shrink:0}
+#presetsPanel{bottom:14px;right:14px;width:215px}
+#presetsPanel button{display:block;width:100%;text-align:left;padding:7px 10px;margin-bottom:4px;background:rgba(255,255,255,0.04);border:1px solid transparent;border-radius:6px;color:var(--fg);cursor:pointer;font-family:inherit;font-size:12px;transition:all .15s}
+#presetsPanel button:hover{background:rgba(0,229,160,0.12);border-color:var(--accent)}
+#presetsPanel button .desc{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+#instructions{bottom:14px;left:14px;padding:10px 18px;font-size:12px;color:var(--muted)}
+#instructions kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-family:inherit;font-size:11px;color:var(--fg)}
+.speed-slider{-webkit-appearance:none;appearance:none;width:110px;height:4px;border-radius:2px;background:rgba(255,255,255,0.12);outline:none}
+.speed-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg)}
+.speed-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg)}
+.divider{height:1px;background:var(--border);margin:8px 0}
+#gravityGraph{position:absolute;bottom:14px;left:240px;width:280px;height:140px;background:var(--card);border:1px solid var(--border);border-radius:10px;backdrop-filter:blur(14px);z-index:10;padding:10px 14px 8px 8px}
+#gravityGraph h3{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin-bottom:4px}
+#gravityCanvas{width:100%;height:calc(100% - 18px);display:block}
+@media(max-width:900px){
+  #gravityGraph{display:none}
+  #legendPanel{display:none}
+  #infoPanel{width:180px;font-size:12px}
+  #presetsPanel{width:170px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<!-- Top Bar -->
+<div class="panel" id="topBar">
+  <button class="ctrl-btn" id="btnSlower" title="Slow down"><i class="fas fa-backward"></i></button>
+  <input type="range" class="speed-slider" id="speedSlider" min="0" max="100" value="55">
+  <button class="ctrl-btn" id="btnFaster" title="Speed up"><i class="fas fa-forward"></i></button>
+  <div class="time-val" id="timeDisplay">0d 0h 0m 0s</div>
+  <button class="ctrl-btn" id="btnPause" title="Pause / Play"><i class="fas fa-pause" id="pauseIcon"></i></button>
+  <button class="ctrl-btn" id="btnReset" title="Reset"><i class="fas fa-undo"></i></button>
+</div>
+
+<!-- Info Panel -->
+<div class="panel" id="infoPanel">
+  <h3>Asteroid Status</h3>
+  <div class="label-row"><span class="lbl">Distance</span><span class="val" id="valDist">—</span></div>
+  <div class="label-row"><span class="lbl">Altitude</span><span class="val" id="valAlt">—</span></div>
+  <div class="label-row"><span class="lbl">Speed</span><span class="val" id="valSpeed">—</span></div>
+  <div class="label-row"><span class="lbl">Gravity</span><span class="val accent" id="valGrav">—</span></div>
+  <div class="label-row"><span class="lbl">Layer</span><span class="val" id="valLayer">—</span></div>
+  <div class="divider"></div>
+  <div class="label-row"><span class="lbl">Time speed</span><span class="val" id="valTimeSpeed">—</span></div>
+  <div class="label-row"><span class="lbl">Zoom</span><span class="val" id="valZoom">—</span></div>
+</div>
+
+<!-- Legend -->
+<div class="panel" id="legendPanel">
+  <h3>Earth Layers</h3>
+  <div class="legend-item"><div class="legend-swatch" style="background:#FFD54F"></div><span>Inner Core — 12.9 g/cm³</span></div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#FF7043"></div><span>Outer Core — 11.0 g/cm³</span></div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#E53935"></div><span>Lower Mantle — 5.0 g/cm³</span></div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#8D6E63"></div><span>Upper Mantle — 3.9 g/cm³</span></div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#78909C"></div><span>Crust — 2.5 g/cm³</span></div>
+</div>
+
+<!-- Presets -->
+<div class="panel" id="presetsPanel">
+  <h3>Launch Presets</h3>
+  <button onclick="launchPreset(0)">Free-fall through center<span class="desc">Drop from 2000 km altitude</span></button>
+  <button onclick="launchPreset(1)">Surface orbit<span class="desc">Circular orbit at the surface</span></button>
+  <button onclick="launchPreset(2)">Through-Earth orbit<span class="desc">Elliptical orbit through the core</span></button>
+  <button onclick="launchPreset(3)">Near-escape trajectory<span class="desc">Almost escaping Earth's gravity</span></button>
+  <button onclick="launchPreset(4)">High orbit (GEO)<span class="desc">Circular orbit at 35,786 km altitude</span></button>
+</div>
+
+<!-- Instructions -->
+<div class="panel" id="instructions">
+  <kbd>Click + Drag</kbd> to place &amp; launch &nbsp;|&nbsp;
+  <kbd>Scroll</kbd> zoom &nbsp;|&nbsp;
+  <kbd>Space</kbd> pause &nbsp;|&nbsp;
+  <kbd>R</kbd> reset
+</div>
+
+<!-- Gravity Profile Graph -->
+<div id="gravityGraph">
+  <h3>Gravity Profile (g vs r)</h3>
+  <canvas id="gravityCanvas"></canvas>
+</div>
+
+<script>
+// ===========================
+// CONSTANTS & LAYER DATA
+// ===========================
+const G_CONST = 6.674e-11;
+const R_EARTH = 6371000;
+
+const LAYERS = [
+  { name:'Inner Core',   rOuter:1221000,  density:12900, fill:'#FFD54F', fillDark:'#F9A825', highlight:'#FFF9C4' },
+  { name:'Outer Core',   rOuter:3470000,  density:11000, fill:'#FF7043', fillDark:'#D84315', highlight:'#FFCCBC' },
+  { name:'Lower Mantle', rOuter:5631000,  density:5000,  fill:'#E53935', fillDark:'#B71C1C', highlight:'#FFCDD2' },
+  { name:'Upper Mantle', rOuter:6346000,  density:3900,  fill:'#8D6E63', fillDark:'#4E342E', highlight:'#D7CCC8' },
+  { name:'Crust',        rOuter:6371000,  density:2500,  fill:'#78909C', fillDark:'#37474F', highlight:'#CFD8DC' }
+];
+
+// Precompute cumulative mass at each layer boundary
+const LAYER_CUM_MASS = [];
+let cm = 0, pr = 0;
+for (const L of LAYERS) {
+  const vol = (4/3)*Math.PI*(Math.pow(L.rOuter,3)-Math.pow(pr,3));
+  cm += vol * L.density;
+  LAYER_CUM_MASS.push(cm);
+  pr = L.rOuter;
+}
+const M_EARTH = LAYER_CUM_MASS[LAYER_CUM_MASS.length-1];
+const G_SURFACE = G_CONST * M_EARTH / (R_EARTH*R_EARTH);
+
+// ===========================
+// ENCLOSED MASS FUNCTION
+// ===========================
+function enclosedMass(r) {
+  const r3 = r*r*r;
+  let mass = 0;
+  let prevR = 0;
+  for (let i = 0; i < LAYERS.length; i++) {
+    const ro = LAYERS[i].rOuter;
+    if (r <= ro) {
+      mass += (4/3)*Math.PI*(r3 - Math.pow(prevR,3))*LAYERS[i].density;
+      return mass;
+    }
+    mass += (4/3)*Math.PI*(Math.pow(ro,3) - Math.pow(prevR,3))*LAYERS[i].density;
+    prevR = ro;
+  }
+  return M_EARTH;
+}
+
+function getLayerIndex(r) {
+  for (let i = 0; i < LAYERS.length; i++) {
+    if (r <= LAYERS[i].rOuter) return i;
+  }
+  return -1;
+}
+
+// ===========================
+// PRECOMPUTE GRAVITY PROFILE
+// ===========================
+const GP_POINTS = 500;
+const GP_MAX_R = 3 * R_EARTH;
+const gravityProfile = [];
+let gProfileMax = 0;
+for (let i = 0; i < GP_POINTS; i++) {
+  const r = (i / (GP_POINTS-1)) * GP_MAX_R;
+  const mEnc = r > 0 ? enclosedMass(r) : 0;
+  const g = r > 0 ? G_CONST * mEnc / (r*r) : 0;
+  gravityProfile.push({ r, g });
+  if (g > gProfileMax) gProfileMax = g;
+}
+
+// ===========================
+// STATE
+// ===========================
+let asteroid = { x:0, y:-1.2e7, vx:3000, vy:0, active:true };
+let simTime = 0;
+let timeAccel = 3000;
+let paused = false;
+let zoom = 1;
+let basePPM = 0;
+let trail = [];
+const MAX_TRAIL = 10000;
+let stars = [];
+let lastFrameTime = performance.now();
+
+// Interaction
+let isPlacing = false;
+let placeStart = null;
+let placeEnd = null;
+
+// ===========================
+// CANVAS SETUP
+// ===========================
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const gCanvas = document.getElementById('gravityCanvas');
+const gCtx = gCanvas.getContext('2d');
+let W, H, dpr;
+
+function resizeCanvas() {
+  dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  basePPM = (H * 0.26) / R_EARTH;
+  generateStars();
+
+  // Resize gravity graph canvas
+  const gRect = gCanvas.parentElement.getBoundingClientRect();
+  gCanvas.width = (gRect.width - 22) * dpr;
+  gCanvas.height = (gRect.height - 28) * dpr;
+  gCanvas.style.width = (gRect.width - 22) + 'px';
+  gCanvas.style.height = (gRect.height - 28) + 'px';
+  gCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function generateStars() {
+  stars = [];
+  for (let i = 0; i < 400; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.2 + 0.3,
+      a: Math.random() * 0.5 + 0.15,
+      ts: Math.random() * 2 + 0.5,
+      tp: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ===========================
+// COORDINATE CONVERSION
+// ===========================
+function worldToScreen(wx, wy) {
+  const ppm = basePPM * zoom;
+  return { x: W/2 + wx * ppm, y: H/2 - wy * ppm };
+}
+
+function screenToWorld(sx, sy) {
+  const ppm = basePPM * zoom;
+  return { x: (sx - W/2) / ppm, y: -(sy - H/2) / ppm };
+}
+
+// ===========================
+// PHYSICS
+// ===========================
+function computeAcceleration(x, y) {
+  const r = Math.sqrt(x*x + y*y);
+  if (r < 50) return { ax:0, ay:0 };
+  const mEnc = enclosedMass(r);
+  const aMag = G_CONST * mEnc / (r*r);
+  return { ax: -aMag * x / r, ay: -aMag * y / r };
+}
+
+function simulatePhysics(totalDt) {
+  if (!asteroid.active || totalDt <= 0) return;
+  const speed = Math.sqrt(asteroid.vx*asteroid.vx + asteroid.vy*asteroid.vy);
+  const maxStep = Math.max(0.1, Math.min(2.0, 3000 / Math.max(speed, 10)));
+  const maxSteps = 10000;
+  let steps = Math.min(Math.ceil(totalDt / maxStep), maxSteps);
+  const dt = totalDt / steps;
+
+  for (let s = 0; s < steps; s++) {
+    const acc = computeAcceleration(asteroid.x, asteroid.y);
+    asteroid.x += asteroid.vx * dt + 0.5 * acc.ax * dt * dt;
+    asteroid.y += asteroid.vy * dt + 0.5 * acc.ay * dt * dt;
+    const accNew = computeAcceleration(asteroid.x, asteroid.y);
+    asteroid.vx += 0.5 * (acc.ax + accNew.ax) * dt;
+    asteroid.vy += 0.5 * (acc.ay + accNew.ay) * dt;
+  }
+  simTime += totalDt;
+
+  trail.push({ x:asteroid.x, y:asteroid.y });
+  if (trail.length > MAX_TRAIL) trail.shift();
+}
+
+// ===========================
+// RENDERING - MAIN CANVAS
+// ===========================
+function drawBackground() {
+  const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.7);
+  grad.addColorStop(0, '#0C1428');
+  grad.addColorStop(0.6, '#080F1E');
+  grad.addColorStop(1, '#030610');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawStars(time) {
+  for (const s of stars) {
+    const tw = 0.5 + 0.5 * Math.sin(time * s.ts + s.tp);
+    const alpha = s.a * (0.5 + 0.5 * tw);
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(200,220,255,${alpha.toFixed(3)})`;
+    ctx.fill();
+  }
+}
+
+function drawEarth() {
+  const ppm = basePPM * zoom;
+  const c = worldToScreen(0, 0);
+
+  // Atmosphere glow
+  const glowR = R_EARTH * ppm * 1.12;
+  if (glowR > 3) {
+    const glowGrad = ctx.createRadialGradient(c.x, c.y, R_EARTH*ppm*0.92, c.x, c.y, glowR);
+    glowGrad.addColorStop(0, 'rgba(80,160,255,0.1)');
+    glowGrad.addColorStop(1, 'rgba(80,160,255,0)');
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, glowR, 0, Math.PI*2);
+    ctx.fillStyle = glowGrad;
+    ctx.fill();
+  }
+
+  // Draw layers from outside in
+  for (let i = LAYERS.length - 1; i >= 0; i--) {
+    const L = LAYERS[i];
+    const rPx = L.rOuter * ppm;
+    if (rPx < 0.5) continue;
+
+    const innerR = i > 0 ? LAYERS[i-1].rOuter * ppm : 0;
+    const grad = ctx.createRadialGradient(c.x, c.y, Math.max(innerR, 0.1), c.x, c.y, rPx);
+    grad.addColorStop(0, L.highlight);
+    grad.addColorStop(0.35, L.fill);
+    grad.addColorStop(1, L.fillDark);
+
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, rPx, 0, Math.PI*2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  // Layer boundary circles
+  ctx.lineWidth = 1;
+  for (let i = 0; i < LAYERS.length; i++) {
+    const rPx = LAYERS[i].rOuter * ppm;
+    if (rPx < 3 || rPx > Math.max(W,H)*2) continue;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, rPx, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.setLineDash([4, 6]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Layer labels (only when zoomed in enough)
+  if (ppm > 1.5e-5) {
+    ctx.font = '500 11px "Space Grotesk"';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i < LAYERS.length; i++) {
+      const L = LAYERS[i];
+      const innerR = i > 0 ? LAYERS[i-1].rOuter : 0;
+      const midR = (innerR + L.rOuter) / 2;
+      const rPx = midR * ppm;
+      if (rPx < 20 || rPx > Math.max(W,H)) continue;
+      const pos = worldToScreen(midR * 0.707, midR * 0.707);
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.fillText(L.name, pos.x + 4, pos.y);
+    }
+  }
+}
+
+function drawTrail() {
+  if (trail.length < 2) return;
+  const len = trail.length;
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  for (let i = 1; i < len; i++) {
+    const alpha = Math.pow(i / len, 1.8) * 0.75;
+    const p0 = worldToScreen(trail[i-1].x, trail[i-1].y);
+    const p1 = worldToScreen(trail[i].x, trail[i].y);
+    // Skip drawing if segment is too long on screen (wrapping artifact)
+    const dx = p1.x - p0.x, dy = p1.y - p0.y;
+    if (dx*dx + dy*dy > 100000) continue;
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.strokeStyle = `rgba(0,229,160,${alpha.toFixed(3)})`;
+    ctx.stroke();
+  }
+}
+
+function drawAsteroid() {
+  if (!asteroid.active) return;
+  const p = worldToScreen(asteroid.x, asteroid.y);
+
+  // Glow
+  const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 20);
+  glow.addColorStop(0, 'rgba(0,229,160,0.6)');
+  glow.addColorStop(0.5, 'rgba(0,229,160,0.15)');
+  glow.addColorStop(1, 'rgba(0,229,160,0)');
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 20, 0, Math.PI*2);
+  ctx.fillStyle = glow;
+  ctx.fill();
+
+  // Core
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 4.5, 0, Math.PI*2);
+  ctx.fillStyle = '#00E5A0';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 2, 0, Math.PI*2);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fill();
+}
+
+function drawGravityArrow() {
+  if (!asteroid.active) return;
+  const r = Math.sqrt(asteroid.x*asteroid.x + asteroid.y*asteroid.y);
+  if (r < 100) return;
+  const mEnc = enclosedMass(r);
+  const gMag = G_CONST * mEnc / (r*r);
+  if (gMag < 0.0005) return;
+
+  const dirX = -asteroid.x / r;
+  const dirY = -asteroid.y / r;
+  const arrowLen = Math.min(55, Math.max(12, gMag / G_SURFACE * 40));
+
+  const p = worldToScreen(asteroid.x, asteroid.y);
+  const endX = p.x + dirX * arrowLen;
+  const endY = p.y - dirY * arrowLen; // flip Y
+
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  ctx.lineTo(endX, endY);
+  ctx.strokeStyle = 'rgba(255,180,60,0.8)';
+  ctx.lineWidth = 2.2;
+  ctx.stroke();
+
+  const angle = Math.atan2(endY - p.y, endX - p.x);
+  ctx.beginPath();
+  ctx.moveTo(endX, endY);
+  ctx.lineTo(endX - 9*Math.cos(angle-0.4), endY - 9*Math.sin(angle-0.4));
+  ctx.lineTo(endX - 9*Math.cos(angle+0.4), endY - 9*Math.sin(angle+0.4));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,180,60,0.8)';
+  ctx.fill();
+}
+
+function drawLaunchArrow() {
+  if (!isPlacing || !placeStart || !placeEnd) return;
+  const dx = placeEnd.x - placeStart.x;
+  const dy = placeEnd.y - placeStart.y;
+  const len = Math.sqrt(dx*dx + dy*dy);
+  if (len < 5) return;
+
+  const velScale = 80;
+  const speed = len * velScale;
+
+  // Dashed line from start to Earth center
+  const centerScreen = worldToScreen(0, 0);
+  ctx.beginPath();
+  ctx.moveTo(placeStart.x, placeStart.y);
+  ctx.lineTo(centerScreen.x, centerScreen.y);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.setLineDash([4, 8]);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Velocity arrow
+  ctx.beginPath();
+  ctx.moveTo(placeStart.x, placeStart.y);
+  ctx.lineTo(placeEnd.x, placeEnd.y);
+  ctx.strokeStyle = 'rgba(0,229,160,0.85)';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  const angle = Math.atan2(dy, dx);
+  ctx.beginPath();
+  ctx.moveTo(placeEnd.x, placeEnd.y);
+  ctx.lineTo(placeEnd.x - 12*Math.cos(angle-0.35), placeEnd.y - 12*Math.sin(angle-0.35));
+  ctx.lineTo(placeEnd.x - 12*Math.cos(angle+0.35), placeEnd.y - 12*Math.sin(angle+0.35));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0,229,160,0.85)';
+  ctx.fill();
+
+  // Info text
+  const worldPos = screenToWorld(placeStart.x, placeStart.y);
+  const rDist = Math.sqrt(worldPos.x*worldPos.x + worldPos.y*worldPos.y);
+  ctx.font = '600 13px "Space Grotesk"';
+  ctx.fillStyle = '#00E5A0';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${(speed/1000).toFixed(1)} km/s`, (placeStart.x+placeEnd.x)/2, (placeStart.y+placeEnd.y)/2 - 14);
+  
+  ctx.font = '400 11px "Space Grotesk"';
+  ctx.fillStyle = 'rgba(200,220,240,0.7)';
+  const altKm = ((rDist - R_EARTH)/1000).toFixed(0);
+  ctx.fillText(`Alt: ${altKm} km`, placeStart.x, placeStart.y + 22);
+
+  // Start dot
+  ctx.beginPath();
+  ctx.arc(placeStart.x, placeStart.y, 5, 0, Math.PI*2);
+  ctx.fillStyle = '#00E5A0';
+  ctx.fill();
+}
+
+function drawScaleBar() {
+  const ppm = basePPM * zoom;
+  const targetPx = 150;
+  const targetM = targetPx / ppm;
+
+  const niceSteps = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000];
+  let bestStep = niceSteps[0];
+  for (const s of niceSteps) {
+    if (s <= targetM * 1.2) bestStep = s;
+  }
+
+  const barPx = bestStep * ppm;
+  const x0 = W - 30 - barPx;
+  const y0 = H - 50;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(x0 - 4, y0 - 20, barPx + 8, 34);
+
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(x0 + barPx, y0);
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x0, y0-5); ctx.lineTo(x0, y0+5);
+  ctx.moveTo(x0+barPx, y0-5); ctx.lineTo(x0+barPx, y0+5);
+  ctx.stroke();
+
+  ctx.font = '500 11px "Space Grotesk"';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'center';
+  let label;
+  if (bestStep >= 1e6) label = (bestStep/1e6).toFixed(0) + ' Mm';
+  else if (bestStep >= 1000) label = (bestStep/1000).toFixed(0) + ' km';
+  else label = bestStep + ' m';
+  ctx.fillText(label, x0 + barPx/2, y0 - 8);
+}
+
+// ===========================
+// RENDERING - GRAVITY GRAPH
+// ===========================
+function drawGravityGraph() {
+  const gW = gCanvas.width / dpr;
+  const gH = gCanvas.height / dpr;
+  
+  gCtx.clearRect(0, 0, gW, gH);
+
+  const pad = { l:30, r:8, t:4, b:18 };
+  const plotW = gW - pad.l - pad.r;
+  const plotH = gH - pad.t - pad.b;
+
+  // Axes
+  gCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  gCtx.lineWidth = 1;
+  gCtx.beginPath();
+  gCtx.moveTo(pad.l, pad.t);
+  gCtx.lineTo(pad.l, pad.t + plotH);
+  gCtx.lineTo(pad.l + plotW, pad.t + plotH);
+  gCtx.stroke();
+
+  // Gravity profile curve
+  gCtx.beginPath();
+  for (let i = 0; i < GP_POINTS; i++) {
+    const px = pad.l + (i / (GP_POINTS-1)) * plotW;
+    const py = pad.t + plotH - (gravityProfile[i].g / gProfileMax) * plotH;
+    if (i === 0) gCtx.moveTo(px, py); else gCtx.lineTo(px, py);
+  }
+  gCtx.strokeStyle = 'rgba(0,229,160,0.6)';
+  gCtx.lineWidth = 1.5;
+  gCtx.stroke();
+
+  // Earth boundary line
+  const earthX = pad.l + (R_EARTH / GP_MAX_R) * plotW;
+  gCtx.beginPath();
+  gCtx.moveTo(earthX, pad.t);
+  gCtx.lineTo(earthX, pad.t + plotH);
+  gCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+  gCtx.setLineDash([3,3]);
+  gCtx.stroke();
+  gCtx.setLineDash([]);
+
+  // Asteroid position indicator
+  if (asteroid.active) {
+    const r = Math.sqrt(asteroid.x*asteroid.x + asteroid.y*asteroid.y);
+    const g = r > 50 ? G_CONST * enclosedMass(r) / (r*r) : 0;
+    const ax = pad.l + (Math.min(r, GP_MAX_R) / GP_MAX_R) * plotW;
+    const ay = pad.t + plotH - (g / gProfileMax) * plotH;
+
+    gCtx.beginPath();
+    gCtx.arc(ax, ay, 4, 0, Math.PI*2);
+    gCtx.fillStyle = '#00E5A0';
+    gCtx.fill();
+    gCtx.beginPath();
+    gCtx.arc(ax, ay, 2, 0, Math.PI*2);
+    gCtx.fillStyle = '#FFFFFF';
+    gCtx.fill();
+  }
+
+  // Labels
+  gCtx.font = '400 9px "Space Grotesk"';
+  gCtx.fillStyle = 'rgba(200,220,240,0.6)';
+  gCtx.textAlign = 'center';
+  gCtx.fillText('0', pad.l, pad.t + plotH + 12);
+  gCtx.fillText('R', earthX, pad.t + plotH + 12);
+  gCtx.fillText('3R', pad.l + plotW, pad.t + plotH + 12);
+  
+  gCtx.textAlign = 'right';
+  gCtx.fillText('0', pad.l - 4, pad.t + plotH);
+  gCtx.fillText(gProfileMax.toFixed(1), pad.l - 4, pad.t + 8);
+}
+
+// ===========================
+// UI UPDATE
+// ===========================
+function formatTime(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  return `${d}d ${h}h ${m}m ${s}s`;
+}
+
+function formatDistance(meters) {
+  const abs = Math.abs(meters);
+  if (abs >= 1e6) return (meters/1e6).toFixed(2) + ' Mm';
+  if (abs >= 1000) return (meters/1000).toFixed(1) + ' km';
+  return meters.toFixed(0) + ' m';
+}
+
+function updateUI() {
+  document.getElementById('timeDisplay').textContent = formatTime(simTime);
+  document.getElementById('valTimeSpeed').textContent = timeAccel.toFixed(0) + '×';
+
+  const zoomStr = zoom >= 1 ? zoom.toFixed(1) + '×' : (1/zoom).toFixed(1) + '× (out)';
+  document.getElementById('valZoom').textContent = zoomStr;
+
+  if (!asteroid.active) return;
+  const r = Math.sqrt(asteroid.x*asteroid.x + asteroid.y*asteroid.y);
+  const speed = Math.sqrt(asteroid.vx*asteroid.vx + asteroid.vy*asteroid.vy);
+  const gMag = r > 50 ? G_CONST * enclosedMass(r) / (r*r) : 0;
+  const layerIdx = getLayerIndex(r);
+
+  document.getElementById('valDist').textContent = formatDistance(r);
+  document.getElementById('valAlt').textContent = formatDistance(r - R_EARTH);
+  document.getElementById('valSpeed').textContent = (speed/1000).toFixed(2) + ' km/s';
+  document.getElementById('valGrav').textContent = gMag.toFixed(3) + ' m/s²';
+  
+  const layerEl = document.getElementById('valLayer');
+  if (layerIdx >= 0) {
+    layerEl.textContent = LAYERS[layerIdx].name;
+    layerEl.style.color = LAYERS[layerIdx].fill;
+  } else {
+    layerEl.textContent = 'Outer Space';
+    layerEl.style.color = '#88AACC';
+  }
+}
+
+// ===========================
+// PRESETS
+// ===========================
+function launchPreset(idx) {
+  trail = [];
+  simTime = 0;
+  asteroid.active = true;
+  const vOrbit = Math.sqrt(G_CONST * M_EARTH / R_EARTH); // ~7905 m/s
+
+  switch(idx) {
+    case 0: // Free-fall through center
+      asteroid.x = 0; asteroid.y = R_EARTH + 2e6;
+      asteroid.vx = 0; asteroid.vy = 0;
+      break;
+    case 1: // Surface orbit
+      asteroid.x = R_EARTH; asteroid.y = 0;
+      asteroid.vx = 0; asteroid.vy = vOrbit;
+      break;
+    case 2: // Through-Earth orbit
+      asteroid.x = R_EARTH + 1e6; asteroid.y = 0;
+      asteroid.vx = 0; asteroid.vy = vOrbit * 0.6;
+      break;
+    case 3: // Near escape
+      asteroid.x = R_EARTH; asteroid.y = 0;
+      asteroid.vx = 0; asteroid.vy = vOrbit * 1.38;
+      break;
+    case 4: // GEO orbit
+      const rGEO = 42164e3;
+      const vGEO = Math.sqrt(G_CONST * M_EARTH / rGEO);
+      asteroid.x = rGEO; asteroid.y = 0;
+      asteroid.vx = 0; asteroid.vy = vGEO;
+      break;
+  }
+  // Auto-adjust zoom to see the orbit
+  const r = Math.sqrt(asteroid.x*asteroid.x + asteroid.y*asteroid.y);
+  const maxOrbitR = idx === 3 ? 6 * R_EARTH : (idx === 4 ? 5 * R_EARTH : 2 * R_EARTH);
+  zoom = (H * 0.35) / (maxOrbitR * basePPM);
+}
+
+// ===========================
+// EVENT HANDLERS
+// ===========================
+canvas.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  isPlacing = true;
+  placeStart = { x: e.clientX, y: e.clientY };
+  placeEnd = { x: e.clientX, y: e.clientY };
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (isPlacing) {
+    placeEnd = { x: e.clientX, y: e.clientY };
+  }
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  if (!isPlacing || !placeStart) return;
+  isPlacing = false;
+  
+  const dx = placeEnd.x - placeStart.x;
+  const dy = placeEnd.y - placeStart.y;
+  const len = Math.sqrt(dx*dx + dy*dy);
+  
+  const worldPos = screenToWorld(placeStart.x, placeStart.y);
+  asteroid.x = worldPos.x;
+  asteroid.y = worldPos.y;
+  
+  const velScale = 80;
+  if (len > 5) {
+    // Direction in world coordinates (flip Y)
+    const ppm = basePPM * zoom;
+    asteroid.vx = (dx / ppm) * velScale * ppm / len * len * velScale / ppm;
+    asteroid.vy = -((dy) / ppm) * velScale * ppm / len * len * velScale / ppm;
+    
+    // Simpler: convert screen drag to world velocity
+    const worldDx = dx / ppm;
+    const worldDy = -dy / ppm;
+    const worldLen = Math.sqrt(worldDx*worldDx + worldDy*worldDy);
+    const speed = len * velScale;
+    asteroid.vx = (worldDx / worldLen) * speed;
+    asteroid.vy = (worldDy / worldLen) * speed;
+  } else {
+    asteroid.vx = 0;
+    asteroid.vy = 0;
+  }
+  
+  asteroid.active = true;
+  trail = [];
+  simTime = 0;
+  placeStart = null;
+  placeEnd = null;
+});
+
+// Touch support
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  isPlacing = true;
+  placeStart = { x: t.clientX, y: t.clientY };
+  placeEnd = { x: t.clientX, y: t.clientY };
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (isPlacing) {
+    const t = e.touches[0];
+    placeEnd = { x: t.clientX, y: t.clientY };
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  if (!isPlacing || !placeStart) return;
+  isPlacing = false;
+  
+  const dx = placeEnd.x - placeStart.x;
+  const dy = placeEnd.y - placeStart.y;
+  const len = Math.sqrt(dx*dx + dy*dy);
+  
+  const worldPos = screenToWorld(placeStart.x, placeStart.y);
+  asteroid.x = worldPos.x;
+  asteroid.y = worldPos.y;
+  
+  const velScale = 80;
+  if (len > 5) {
+    const ppm = basePPM * zoom;
+    const worldDx = dx / ppm;
+    const worldDy = -dy / ppm;
+    const worldLen = Math.sqrt(worldDx*worldDx + worldDy*worldDy);
+    const speed = len * velScale;
+    asteroid.vx = (worldDx / worldLen) * speed;
+    asteroid.vy = (worldDy / worldLen) * speed;
+  } else {
+    asteroid.vx = 0;
+    asteroid.vy = 0;
+  }
+  
+  asteroid.active = true;
+  trail = [];
+  simTime = 0;
+  placeStart = null;
+  placeEnd = null;
+}, { passive: false });
+
+// Zoom with scroll
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 0.88 : 1.14;
+  zoom *= factor;
+  zoom = Math.max(0.01, Math.min(1000, zoom));
+}, { passive: false });
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    paused = !paused;
+    document.getElementById('pauseIcon').className = paused ? 'fas fa-play' : 'fas fa-pause';
+  }
+  if (e.code === 'KeyR') {
+    launchPreset(2); // Default reset to through-earth orbit
+  }
+});
+
+// UI Buttons
+document.getElementById('btnPause').addEventListener('click', () => {
+  paused = !paused;
+  document.getElementById('pauseIcon').className = paused ? 'fas fa-play' : 'fas fa-pause';
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  launchPreset(2);
+});
+
+document.getElementById('btnSlower').addEventListener('click', () => {
+  timeAccel = Math.max(10, timeAccel / 1.6);
+  document.getElementById('speedSlider').value = Math.log10(timeAccel);
+});
+
+document.getElementById('btnFaster').addEventListener('click', () => {
+  timeAccel = Math.min(1e7, timeAccel * 1.6);
+  document.getElementById('speedSlider').value = Math.log10(timeAccel);
+});
+
+const speedSlider = document.getElementById('speedSlider');
+speedSlider.addEventListener('input', () => {
+  // Logarithmic scale: slider 0-100 maps to 10 - 10^7
+  const t = speedSlider.value / 100;
+  timeAccel = Math.pow(10, 1 + t * 6); // 10 to 10^7
+});
+
+// ===========================
+// ANIMATION LOOP
+// ===========================
+function animate(timestamp) {
+  requestAnimationFrame(animate);
+
+  const realDt = Math.min((timestamp - lastFrameTime) / 1000, 0.1); // cap at 100ms
+  lastFrameTime = timestamp;
+
+  // Physics
+  if (!paused && !isPlacing) {
+    const simDt = realDt * timeAccel;
+    simulatePhysics(simDt);
+  }
+
+  // Render main canvas
+  drawBackground();
+  drawStars(timestamp / 1000);
+  drawEarth();
+  drawTrail();
+  drawAsteroid();
+  drawGravityArrow();
+  drawLaunchArrow();
+  drawScaleBar();
+
+  // Render gravity graph
+  drawGravityGraph();
+
+  // Update UI text
+  updateUI();
+}
+
+// ===========================
+// INITIALIZATION
+// ===========================
+launchPreset(2); // Start with a through-Earth orbit
+lastFrameTime = performance.now();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

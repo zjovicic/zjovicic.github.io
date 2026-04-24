@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindForge — Mind Map Creator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1119;
+      --fg: #e8eaed;
+      --muted: #7a8299;
+      --accent: #FFB627;
+      --card: rgba(22, 25, 38, 0.88);
+      --border: rgba(255, 255, 255, 0.07);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg); color: var(--fg);
+      overflow: hidden; height: 100vh; width: 100vw;
+      user-select: none;
+    }
+    canvas { display: block; }
+    canvas.mode-add { cursor: crosshair; }
+
+    .toolbar {
+      position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 3px; padding: 7px 10px;
+      background: var(--card); backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border); border-radius: 14px;
+      z-index: 100; box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+    }
+    .toolbar button {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 7px 13px; background: transparent; color: var(--fg);
+      border: 1px solid transparent; border-radius: 9px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12.5px; font-weight: 500;
+      cursor: pointer; transition: all .18s ease; white-space: nowrap;
+    }
+    .toolbar button:hover:not(:disabled) { background: rgba(255,255,255,0.07); border-color: var(--border); }
+    .toolbar button:active:not(:disabled) { transform: scale(0.95); }
+    .toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+    .toolbar button.active { background: var(--accent); color: #1a1a2e; border-color: var(--accent); }
+    .toolbar .sep { width: 1px; background: var(--border); margin: 4px 6px; flex-shrink: 0; }
+
+    .mode-banner {
+      position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
+      padding: 7px 18px; border-radius: 9px; font-size: 12.5px; z-index: 100;
+      background: rgba(255,182,39,0.12); border: 1px solid rgba(255,182,39,0.25);
+      color: var(--accent); display: none; pointer-events: none;
+    }
+    .mode-banner.visible { display: flex; align-items: center; gap: 8px; animation: fadeSlide .2s ease; }
+    .mode-banner kbd {
+      padding: 1px 5px; background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border); border-radius: 4px; font-size: 11px; color: var(--fg);
+    }
+
+    .info-pill {
+      position: fixed; padding: 6px 13px;
+      background: var(--card); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 11.5px; color: var(--muted); z-index: 100;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+
+    .help-panel {
+      position: fixed; bottom: 14px; right: 14px;
+      padding: 14px 18px; max-width: 270px;
+      background: var(--card); backdrop-filter: blur(24px);
+      border: 1px solid var(--border); border-radius: 12px;
+      font-size: 11.5px; line-height: 1.9; color: var(--muted);
+      z-index: 100; box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      transition: opacity .2s, transform .2s;
+    }
+    .help-panel.hidden { opacity: 0; transform: translateY(8px); pointer-events: none; }
+    .help-panel kbd {
+      display: inline-block; padding: 0 5px;
+      background: rgba(255,255,255,0.07); border: 1px solid var(--border);
+      border-radius: 4px; font-family: 'Space Grotesk', monospace;
+      font-size: 10.5px; color: var(--fg);
+    }
+    .help-toggle {
+      position: fixed; bottom: 14px; right: 14px; z-index: 101;
+      width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); backdrop-filter: blur(20px);
+      color: var(--muted); font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .18s;
+    }
+    .help-toggle:hover { background: rgba(255,255,255,0.07); color: var(--fg); }
+
+    .toast-wrap {
+      position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+      z-index: 200; display: flex; flex-direction: column; gap: 8px; align-items: center;
+    }
+    .toast {
+      padding: 9px 20px; background: var(--card); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 9px;
+      font-size: 12.5px; color: var(--fg);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      animation: toastIn .25s ease, toastOut .25s ease 2.5s forwards;
+    }
+
+    .edit-input {
+      position: fixed; z-index: 150;
+      padding: 6px 10px; background: rgba(18,20,32,0.96);
+      backdrop-filter: blur(8px);
+      border: 2px solid var(--accent); border-radius: 8px;
+      color: var(--fg); font-family: 'DM Sans', sans-serif;
+      font-size: 14px; text-align: center; outline: none;
+      box-shadow: 0 4px 24px rgba(255,182,39,0.18);
+    }
+
+    @keyframes fadeSlide { from{opacity:0;transform:translateX(-50%) translateY(-6px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+    @keyframes toastIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateY(-8px)} }
+
+    @media (max-width: 800px) {
+      .toolbar button span { display: none; }
+      .toolbar button { padding: 7px 10px; }
+      .help-panel { max-width: 200px; font-size: 10.5px; padding: 10px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="toolbar" id="toolbar">
+  <button id="btnAdd" disabled title="Add child to selected node (Tab)">
+    <i class="fa-solid fa-plus"></i><span>Add Child</span>
+  </button>
+  <button id="btnNewRoot" title="Add a new root node (double-click empty space)">
+    <i class="fa-solid fa-circle-dot"></i><span>New Root</span>
+  </button>
+  <button id="btnEdit" disabled title="Edit text (Enter)">
+    <i class="fa-solid fa-pen"></i><span>Edit</span>
+  </button>
+  <button id="btnCollapse" disabled title="Collapse / Expand subtree (C)">
+    <i class="fa-solid fa-compress"></i><span>Collapse</span>
+  </button>
+  <button id="btnDelete" disabled title="Delete node (Del)">
+    <i class="fa-solid fa-trash-can"></i><span>Delete</span>
+  </button>
+  <div class="sep"></div>
+  <button id="btnZoomIn" title="Zoom in"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+  <button id="btnZoomOut" title="Zoom out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+  <button id="btnFit" title="Fit all in view"><i class="fa-solid fa-expand"></i></button>
+  <div class="sep"></div>
+  <button id="btnSave" title="Save to file (Ctrl+S)"><i class="fa-solid fa-download"></i><span>Save</span></button>
+  <button id="btnLoad" title="Load from file (Ctrl+O)"><i class="fa-solid fa-upload"></i><span>Load</span></button>
+</div>
+
+<div class="mode-banner" id="modeBanner">
+  Click to place a new child &mdash; <kbd>Esc</kbd> cancel &mdash; click a node to switch parent
+</div>
+
+<div class="info-pill" id="zoomPill" style="bottom:14px;left:14px">100 %</div>
+<div class="info-pill" id="statusPill" style="top:14px;right:14px">1 node</div>
+
+<button class="help-toggle" id="helpToggle" title="Toggle help"><i class="fa-solid fa-keyboard"></i></button>
+<div class="help-panel" id="helpPanel">
+  <div style="color:var(--fg);font-weight:600;margin-bottom:4px">Shortcuts</div>
+  <div><kbd>Tab</kbd> Add child to selected</div>
+  <div><kbd>Enter</kbd> Edit node text</div>
+  <div><kbd>C</kbd> Collapse / expand</div>
+  <div><kbd>Del</kbd> Delete node</div>
+  <div><kbd>Esc</kbd> Cancel / deselect</div>
+  <div><kbd>Scroll</kbd> Zoom</div>
+  <div><kbd>Drag node</kbd> Move (adjust branch)</div>
+  <div><kbd>Drag canvas</kbd> Pan</div>
+  <div><kbd>Dbl-click</kbd> Edit text / New root</div>
+  <div><kbd>Ctrl+S</kbd> Save</div>
+  <div><kbd>Ctrl+O</kbd> Load</div>
+  <div style="margin-top:6px;font-style:italic;font-size:10.5px">Drag nodes to control branch direction &amp; length</div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+<input type="file" id="fileInput" accept=".json" style="display:none">
+
+<script>
+/* ==============================================
+   CONFIGURATION
+   ============================================== */
+const DEPTH_COLORS = [
+  '#FFB627','#06D6A0','#4CC9F0','#EF476F','#FFD166',
+  '#7209B7','#F78C6B','#2EC4B6','#E29578','#00B4D8',
+  '#C77DFF','#F72585'
+];
+const MIN_ZOOM = 0.04;
+const MAX_ZOOM = 6;
+const GRID_SIZE = 50;
+
+/* ==============================================
+   STATE
+   ============================================== */
+let nodes = [];
+let nextId = 1;
+let selectedId = null;
+let hoveredId = null;
+let mode = 'select'; // 'select' | 'add'
+let camera = { x: 0, y: 0, zoom: 1 };
+let drag = {
+  active: false, type: null,
+  sx: 0, sy: 0, wx: 0, wy: 0,
+  camX0: 0, camY0: 0,
+  nodeId: null, initPos: []
+};
+let mouseWorld = { x: 0, y: 0 };
+let editingId = null;
+let helpVisible = true;
+
+/* ==============================================
+   CANVAS SETUP
+   ============================================== */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const dpr = window.devicePixelRatio || 1;
+
+function resize() {
+  canvas.width  = window.innerWidth  * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width  = window.innerWidth  + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  render();
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ==============================================
+   COORDINATE HELPERS
+   ============================================== */
+function s2w(sx, sy) {
+  return {
+    x: (sx - window.innerWidth  / 2) / camera.zoom - camera.x,
+    y: (sy - window.innerHeight / 2) / camera.zoom - camera.y
+  };
+}
+function w2s(wx, wy) {
+  return {
+    x: (wx + camera.x) * camera.zoom + window.innerWidth  / 2,
+    y: (wy + camera.y) * camera.zoom + window.innerHeight / 2
+  };
+}
+
+/* ==============================================
+   NODE UTILITIES
+   ============================================== */
+function byId(id) { return nodes.find(n => n.id === id); }
+
+function nodeDepth(node) {
+  let d = 0, c = node;
+  while (c.parentId != null) { c = byId(c.parentId); if (!c) break; d++; }
+  return d;
+}
+
+function children(pid) { return nodes.filter(n => n.parentId === pid); }
+
+function descendants(pid) {
+  const r = [];
+  for (const ch of children(pid)) { r.push(ch); r.push(...descendants(ch.id)); }
+  return r;
+}
+
+function selfAndDesc(id) {
+  const n = byId(id);
+  return n ? [n, ...descendants(id)] : [];
+}
+
+function isVisible(node) {
+  let c = node;
+  while (c.parentId != null) {
+    const p = byId(c.parentId);
+    if (!p || p.collapsed) return false;
+    c = p;
+  }
+  return true;
+}
+
+function depthColor(d) { return DEPTH_COLORS[d % DEPTH_COLORS.length]; }
+
+function textColorFor(bg) {
+  const r = parseInt(bg.slice(1,3),16);
+  const g = parseInt(bg.slice(3,5),16);
+  const b = parseInt(bg.slice(5,7),16);
+  return (0.299*r + 0.587*g + 0.114*b) / 255 > 0.55 ? '#1a1a2e' : '#ffffff';
+}
+
+function nodeSize(text, d) {
+  const fs = d === 0 ? 17 : 13.5;
+  ctx.font = `${d===0?700:500} ${fs}px 'DM Sans', sans-serif`;
+  const m = ctx.measureText(text);
+  const pw = 26, ph = d === 0 ? 16 : 13;
+  return { w: Math.max(90, m.width + pw*2), h: fs + ph*2, fs };
+}
+
+function hitTest(wx, wy) {
+  // Check in reverse so topmost nodes win
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const n = nodes[i];
+    if (!isVisible(n)) continue;
+    const { w, h } = nodeSize(n.text, nodeDepth(n));
+    if (wx >= n.x - w/2 && wx <= n.x + w/2 &&
+        wy >= n.y - h/2 && wy <= n.y + h/2) return n;
+  }
+  return null;
+}
+
+function edgePoint(cx, cy, w, h, tx, ty) {
+  const dx = tx - cx, dy = ty - cy;
+  if (dx === 0 && dy === 0) return { x: cx, y: cy };
+  const hw = w/2, hh = h/2;
+  const s = Math.abs(dx)*hh > Math.abs(dy)*hw ? hw / Math.abs(dx) : hh / Math.abs(dy);
+  return { x: cx + dx*s, y: cy + dy*s };
+}
+
+/* ==============================================
+   TOAST
+   ============================================== */
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+/* ==============================================
+   RENDERING
+   ============================================== */
+function render() {
+  const W = window.innerWidth, H = window.innerHeight;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#0f1119';
+  ctx.fillRect(0, 0, W, H);
+
+  // Center ambient glow
+  const cg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.55);
+  cg.addColorStop(0, 'rgba(255,182,39,0.025)');
+  cg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = cg;
+  ctx.fillRect(0, 0, W, H);
+
+  drawGrid(W, H);
+
+  ctx.save();
+  ctx.translate(W/2, H/2);
+  ctx.scale(camera.zoom, camera.zoom);
+  ctx.translate(camera.x, camera.y);
+
+  // Connections
+  for (const n of nodes) {
+    if (n.parentId == null || !isVisible(n)) continue;
+    const p = byId(n.parentId);
+    if (p) drawConn(p, n);
+  }
+
+  // Preview line when adding
+  if (mode === 'add' && selectedId != null) {
+    const p = byId(selectedId);
+    if (p) drawPreview(p, mouseWorld);
+  }
+
+  // Nodes — root drawn last (on top)
+  const sorted = [...nodes].sort((a,b) => {
+    if (a.parentId == null) return 1;
+    if (b.parentId == null) return -1;
+    return 0;
+  });
+  for (const n of sorted) {
+    if (isVisible(n)) drawNode(n);
+  }
+
+  ctx.restore();
+}
+
+function drawGrid(W, H) {
+  const tl = s2w(0, 0), br = s2w(W, H);
+  const sx = Math.floor(tl.x / GRID_SIZE) * GRID_SIZE;
+  const sy = Math.floor(tl.y / GRID_SIZE) * GRID_SIZE;
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  for (let x = sx; x <= br.x; x += GRID_SIZE) {
+    for (let y = sy; y <= br.y; y += GRID_SIZE) {
+      const s = w2s(x, y);
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 0.8, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+
+function drawConn(parent, child) {
+  const d = nodeDepth(child);
+  const col = depthColor(d);
+  const lw = Math.max(1.2, 2.8 - d*0.25);
+  const ps = nodeSize(parent.text, nodeDepth(parent));
+  const cs = nodeSize(child.text, d);
+  const pe = edgePoint(parent.x, parent.y, ps.w, ps.h, child.x, child.y);
+  const ce = edgePoint(child.x, child.y, cs.w, cs.h, parent.x, parent.y);
+
+  const mx = (pe.x+ce.x)/2, my = (pe.y+ce.y)/2;
+  const dx = ce.x-pe.x, dy = ce.y-pe.y;
+  const len = Math.sqrt(dx*dx+dy*dy) || 1;
+  const curv = len * 0.12;
+  const cpx = mx + (-dy/len)*curv, cpy = my + (dx/len)*curv;
+
+  // Glow
+  ctx.beginPath(); ctx.moveTo(pe.x, pe.y); ctx.quadraticCurveTo(cpx, cpy, ce.x, ce.y);
+  ctx.strokeStyle = col + '18'; ctx.lineWidth = lw + 5; ctx.lineCap = 'round'; ctx.stroke();
+
+  // Main line
+  ctx.beginPath(); ctx.moveTo(pe.x, pe.y); ctx.quadraticCurveTo(cpx, cpy, ce.x, ce.y);
+  ctx.strokeStyle = col + '70'; ctx.lineWidth = lw; ctx.stroke();
+}
+
+function drawPreview(parent, target) {
+  const ps = nodeSize(parent.text, nodeDepth(parent));
+  const pe = edgePoint(parent.x, parent.y, ps.w, ps.h, target.x, target.y);
+  ctx.beginPath(); ctx.moveTo(pe.x, pe.y); ctx.lineTo(target.x, target.y);
+  ctx.strokeStyle = 'rgba(255,182,39,0.35)'; ctx.lineWidth = 1.8;
+  ctx.setLineDash([7,5]); ctx.stroke(); ctx.setLineDash([]);
+
+  // Ghost node
+  const gw = 90, gh = 36;
+  rr(ctx, target.x-gw/2, target.y-gh/2, gw, gh, 9);
+  ctx.fillStyle = 'rgba(255,182,39,0.06)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,182,39,0.3)'; ctx.lineWidth = 1.2;
+  ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawNode(n) {
+  const d = nodeDepth(n);
+  const col = depthColor(d);
+  const tc = textColorFor(col);
+  const { w, h, fs } = nodeSize(n.text, d);
+  const isSel = n.id === selectedId;
+  const isHov = n.id === hoveredId && !isSel;
+
+  // Root glow
+  if (d === 0) {
+    const rg = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 90);
+    rg.addColorStop(0, col + '14');
+    rg.addColorStop(1, col + '00');
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(n.x, n.y, 90, 0, Math.PI*2); ctx.fill();
+  }
+
+  // Shadow
+  ctx.shadowColor = col + '30';
+  ctx.shadowBlur = isSel ? 24 : 10;
+  ctx.shadowOffsetY = 3;
+
+  // Fill
+  ctx.fillStyle = col;
+  rr(ctx, n.x - w/2, n.y - h/2, w, h, d===0 ? 12 : 9);
+  ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  // Glass highlight
+  ctx.save();
+  rr(ctx, n.x - w/2, n.y - h/2, w, h, d===0 ? 12 : 9);
+  ctx.clip();
+  const hg = ctx.createLinearGradient(n.x, n.y - h/2, n.x, n.y + h/4);
+  hg.addColorStop(0, 'rgba(255,255,255,0.14)');
+  hg.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = hg;
+  ctx.fillRect(n.x - w/2, n.y - h/2, w, h);
+  ctx.restore();
+
+  // Selection ring
+  if (isSel) {
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5;
+    rr(ctx, n.x - w/2 - 3, n.y - h/2 - 3, w + 6, h + 6, d===0 ? 15 : 12);
+    ctx.stroke();
+  } else if (isHov) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1.4;
+    rr(ctx, n.x - w/2 - 1, n.y - h/2 - 1, w + 2, h + 2, d===0 ? 13 : 10);
+    ctx.stroke();
+  }
+
+  // Text
+  ctx.fillStyle = tc;
+  ctx.font = `${d===0?700:500} ${fs}px 'DM Sans', sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(n.text, n.x, n.y + 0.5);
+
+  // Collapse badge
+  if (n.collapsed) {
+    const kids = children(n.id);
+    if (kids.length) {
+      const bx = n.x + w/2 - 2, by = n.y - h/2 + 2;
+      ctx.beginPath(); ctx.arc(bx, by, 9, 0, Math.PI*2);
+      ctx.fillStyle = '#1a1a2e'; ctx.fill();
+      ctx.strokeStyle = col; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.fillStyle = tc;
+      ctx.font = "600 9px 'Space Grotesk', sans-serif";
+      ctx.fillText(kids.length, bx, by + 0.5);
+    }
+  }
+}
+
+function rr(c, x, y, w, h, r) {
+  r = Math.min(r, w/2, h/2);
+  c.beginPath();
+  c.moveTo(x+r, y);
+  c.arcTo(x+w, y,   x+w, y+h, r);
+  c.arcTo(x+w, y+h, x,   y+h, r);
+  c.arcTo(x,   y+h, x,   y,   r);
+  c.arcTo(x,   y,   x+w, y,   r);
+  c.closePath();
+}
+
+/* ==============================================
+   TEXT EDITING
+   ============================================== */
+function startEdit(id) {
+  if (editingId != null) finishEdit();
+  editingId = id;
+  const n = byId(id); if (!n) return;
+  const d = nodeDepth(n);
+  const { w, h, fs } = nodeSize(n.text, d);
+  const sp = w2s(n.x, n.y);
+  const sw = w * camera.zoom, sh = h * camera.zoom, sfs = fs * camera.zoom;
+
+  const inp = document.createElement('input');
+  inp.className = 'edit-input'; inp.id = 'editInp';
+  inp.value = n.text;
+  inp.style.left   = (sp.x - sw/2) + 'px';
+  inp.style.top    = (sp.y - sh/2) + 'px';
+  inp.style.width  = Math.max(sw, 120) + 'px';
+  inp.style.height = sh + 'px';
+  inp.style.fontSize = sfs + 'px';
+  document.body.appendChild(inp);
+  requestAnimationFrame(() => { inp.focus(); inp.select(); });
+
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter')    { e.preventDefault(); finishEdit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+  });
+  inp.addEventListener('blur', () => setTimeout(() => { if (editingId === id) finishEdit(); }, 120));
+}
+
+function finishEdit() {
+  const inp = document.getElementById('editInp');
+  if (inp && editingId != null) {
+    const n = byId(editingId);
+    if (n) { const t = inp.value.trim(); if (t) n.text = t; }
+    inp.remove(); editingId = null; syncUI(); render();
+  }
+}
+
+function cancelEdit() {
+  const inp = document.getElementById('editInp');
+  if (inp) inp.remove();
+  editingId = null; render();
+}
+
+/* ==============================================
+   UI SYNC
+   ============================================== */
+function syncUI() {
+  const bAdd = document.getElementById('btnAdd');
+  const bEd  = document.getElementById('btnEdit');
+  const bDel = document.getElementById('btnDelete');
+  const bCol = document.getElementById('btnCollapse');
+
+  bAdd.disabled = selectedId == null;
+  bEd.disabled  = selectedId == null;
+  bDel.disabled = selectedId == null || byId(selectedId)?.parentId == null;
+
+  const hasKids = selectedId != null && children(selectedId).length > 0;
+  bCol.disabled = !hasKids;
+  if (hasKids) {
+    const collapsed = byId(selectedId).collapsed;
+    bCol.innerHTML = collapsed
+      ? '<i class="fa-solid fa-expand"></i><span>Expand</span>'
+      : '<i class="fa-solid fa-compress"></i><span>Collapse</span>';
+  }
+
+  bAdd.classList.toggle('active', mode === 'add');
+  document.getElementById('modeBanner').classList.toggle('visible', mode === 'add');
+  canvas.classList.toggle('mode-add', mode === 'add');
+  document.getElementById('zoomPill').textContent = Math.round(camera.zoom * 100) + ' %';
+
+  let st = `${nodes.length} node${nodes.length!==1?'s':''}`;
+  if (selectedId != null) {
+    const n = byId(selectedId);
+    if (n) {
+      const d2 = nodeDepth(n), cc = children(selectedId).length;
+      st += ` &middot; L${d2} &middot; ${cc} child${cc!==1?'ren':''}`;
+    }
+  }
+  document.getElementById('statusPill').innerHTML = st;
+}
+
+/* ==============================================
+   NODE OPERATIONS
+   ============================================== */
+function addNode(text, x, y, parentId) {
+  const n = { id: nextId++, text, x, y, parentId, collapsed: false };
+  nodes.push(n);
+  return n;
+}
+
+function deleteNode(id) {
+  const fam = selfAndDesc(id);
+  const ids = new Set(fam.map(n => n.id));
+  nodes = nodes.filter(n => !ids.has(n.id));
+  if (ids.has(selectedId)) selectedId = null;
+  if (ids.has(hoveredId)) hoveredId = null;
+}
+
+function fitView() {
+  if (!nodes.length) { camera = {x:0,y:0,zoom:1}; syncUI(); render(); return; }
+  let x0=Infinity, x1=-Infinity, y0=Infinity, y1=-Infinity;
+  for (const n of nodes) {
+    if (!isVisible(n)) continue;
+    const {w,h} = nodeSize(n.text, nodeDepth(n));
+    x0 = Math.min(x0, n.x-w/2); x1 = Math.max(x1, n.x+w/2);
+    y0 = Math.min(y0, n.y-h/2); y1 = Math.max(y1, n.y+h/2);
+  }
+  if (x0===Infinity) { camera={x:0,y:0,zoom:1}; syncUI(); render(); return; }
+  const cx = (x0+x1)/2, cy = (y0+y1)/2;
+  const cw = x1-x0+140, ch = y1-y0+140;
+  camera.x = -cx; camera.y = -cy;
+  camera.zoom = Math.min(window.innerWidth/cw, window.innerHeight/ch, 1.6);
+  camera.zoom = Math.max(MIN_ZOOM, camera.zoom);
+  syncUI(); render();
+}
+
+/* ==============================================
+   MOUSE EVENTS
+   ============================================== */
+canvas.addEventListener('mousedown', e => {
+  if (editingId != null) return;
+  const sx = e.clientX, sy = e.clientY;
+  const w = s2w(sx, sy);
+
+  // Add-child placement mode
+  if (mode === 'add' && selectedId != null) {
+    const hit = hitTest(w.x, w.y);
+    if (hit) {
+      // Clicked a node: switch parent
+      selectedId = hit.id;
+      syncUI(); render();
+      return;
+    }
+    // Place child at click location
+    const nn = addNode('New Concept', w.x, w.y, selectedId);
+    selectedId = nn.id;
+    mode = 'select';
+    syncUI(); render();
+    startEdit(nn.id);
+    return;
+  }
+
+  // Normal select/drag
+  const hit = hitTest(w.x, w.y);
+  if (hit) {
+    selectedId = hit.id;
+    drag.active = true; drag.type = 'node'; drag.nodeId = hit.id;
+    drag.sx = sx; drag.sy = sy; drag.wx = w.x; drag.wy = w.y;
+    const fam = selfAndDesc(hit.id);
+    drag.initPos = fam.map(n => ({id:n.id, x:n.x, y:n.y}));
+    canvas.style.cursor = 'grabbing';
+  } else {
+    selectedId = null;
+    drag.active = true; drag.type = 'pan';
+    drag.sx = sx; drag.sy = sy;
+    drag.camX0 = camera.x; drag.camY0 = camera.y;
+    canvas.style.cursor = 'move';
+  }
+  syncUI(); render();
+});
+
+canvas.addEventListener('mousemove', e => {
+  const sx = e.clientX, sy = e.clientY;
+  const w = s2w(sx, sy);
+  mouseWorld.x = w.x; mouseWorld.y = w.y;
+
+  if (drag.active) {
+    if (drag.type === 'node') {
+      const dx = w.x - drag.wx, dy = w.y - drag.wy;
+      for (const p of drag.initPos) {
+        const n = byId(p.id);
+        if (n) { n.x = p.x + dx; n.y = p.y + dy; }
+      }
+      render();
+    } else if (drag.type === 'pan') {
+      camera.x = drag.camX0 + (sx - drag.sx) / camera.zoom;
+      camera.y = drag.camY0 + (sy - drag.sy) / camera.zoom;
+      render(); syncUI();
+    }
+  } else if (mode === 'add') {
+    render(); // Update preview line
+  } else {
+    const hit = hitTest(w.x, w.y);
+    const newHov = hit ? hit.id : null;
+    if (newHov !== hoveredId) { hoveredId = newHov; render(); }
+    canvas.style.cursor = hit ? 'grab' : 'default';
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  if (drag.active) {
+    drag.active = false; drag.type = null;
+    canvas.style.cursor = mode==='add' ? 'crosshair' : 'default';
+  }
+});
+
+canvas.addEventListener('dblclick', e => {
+  if (editingId != null) return;
+  const w = s2w(e.clientX, e.clientY);
+  const hit = hitTest(w.x, w.y);
+  if (hit) {
+    selectedId = hit.id; syncUI(); render();
+    startEdit(hit.id);
+  } else {
+    // Double-click empty space: create new root
+    const nn = addNode('New Root', w.x, w.y, null);
+    selectedId = nn.id;
+    syncUI(); render();
+    startEdit(nn.id);
+  }
+});
+
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if (mode === 'add') { mode = 'select'; syncUI(); render(); }
+});
+
+/* ==============================================
+   ZOOM (WHEEL)
+   ============================================== */
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 1/1.1;
+  const newZ = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, camera.zoom * factor));
+  const wb = s2w(e.clientX, e.clientY);
+  camera.zoom = newZ;
+  const wa = s2w(e.clientX, e.clientY);
+  camera.x += wa.x - wb.x;
+  camera.y += wa.y - wb.y;
+  render(); syncUI();
+}, { passive: false });
+
+/* ==============================================
+   TOUCH EVENTS
+   ============================================== */
+let tDist = 0, tZoom = 1;
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    const t = e.touches[0];
+    canvas.dispatchEvent(new MouseEvent('mousedown', {clientX:t.clientX, clientY:t.clientY}));
+  } else if (e.touches.length === 2) {
+    drag.active = false;
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    tDist = Math.sqrt(dx*dx+dy*dy); tZoom = camera.zoom;
+  }
+}, {passive:false});
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && drag.active) {
+    const t = e.touches[0];
+    canvas.dispatchEvent(new MouseEvent('mousemove', {clientX:t.clientX, clientY:t.clientY}));
+  } else if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const d = Math.sqrt(dx*dx+dy*dy);
+    camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, tZoom * d / tDist));
+    render(); syncUI();
+  }
+}, {passive:false});
+
+canvas.addEventListener('touchend', () => {
+  canvas.dispatchEvent(new MouseEvent('mouseup'));
+});
+
+/* ==============================================
+   KEYBOARD
+   ============================================== */
+document.addEventListener('keydown', e => {
+  if (editingId != null) return;
+
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    if (selectedId != null) {
+      mode = mode==='add' ? 'select' : 'add';
+      syncUI(); render();
+    }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (selectedId != null) startEdit(selectedId);
+  } else if (e.key === 'Delete' || e.key === 'Backspace') {
+    e.preventDefault();
+    if (selectedId != null && byId(selectedId)?.parentId != null) {
+      deleteNode(selectedId); toast('Node deleted'); syncUI(); render();
+    }
+  } else if (e.key === 'c' || e.key === 'C') {
+    if (selectedId != null && children(selectedId).length) {
+      const n = byId(selectedId); n.collapsed = !n.collapsed;
+      syncUI(); render();
+    }
+  } else if (e.key === 'Escape') {
+    if (mode === 'add') { mode = 'select'; }
+    else { selectedId = null; }
+    syncUI(); render();
+  } else if (e.ctrlKey && e.key === 's') {
+    e.preventDefault(); saveMap();
+  } else if (e.ctrlKey && e.key === 'o') {
+    e.preventDefault(); document.getElementById('fileInput').click();
+  }
+});
+
+/* ==============================================
+   TOOLBAR BUTTONS
+   ============================================== */
+document.getElementById('btnAdd').onclick = () => {
+  if (selectedId == null) return;
+  mode = mode==='add' ? 'select' : 'add';
+  syncUI(); render();
+};
+
+document.getElementById('btnNewRoot').onclick = () => {
+  const c = s2w(window.innerWidth/2, window.innerHeight/2);
+  const nn = addNode('New Root', c.x, c.y, null);
+  selectedId = nn.id;
+  syncUI(); render();
+  startEdit(nn.id);
+};
+
+document.getElementById('btnEdit').onclick = () => {
+  if (selectedId != null) startEdit(selectedId);
+};
+
+document.getElementById('btnCollapse').onclick = () => {
+  if (selectedId != null && children(selectedId).length) {
+    const n = byId(selectedId);
+    n.collapsed = !n.collapsed;
+    syncUI(); render();
+  }
+};
+
+document.getElementById('btnDelete').onclick = () => {
+  if (selectedId != null && byId(selectedId)?.parentId != null) {
+    deleteNode(selectedId); toast('Node deleted'); syncUI(); render();
+  }
+};
+
+document.getElementById('btnZoomIn').onclick = () => {
+  const cx = window.innerWidth/2, cy = window.innerHeight/2;
+  const wb = s2w(cx, cy);
+  camera.zoom = Math.min(MAX_ZOOM, camera.zoom * 1.25);
+  const wa = s2w(cx, cy);
+  camera.x += wa.x - wb.x; camera.y += wa.y - wb.y;
+  render(); syncUI();
+};
+
+document.getElementById('btnZoomOut').onclick = () => {
+  const cx = window.innerWidth/2, cy = window.innerHeight/2;
+  const wb = s2w(cx, cy);
+  camera.zoom = Math.max(MIN_ZOOM, camera.zoom / 1.25);
+  const wa = s2w(cx, cy);
+  camera.x += wa.x - wb.x; camera.y += wa.y - wb.y;
+  render(); syncUI();
+};
+
+document.getElementById('btnFit').onclick = () => fitView();
+
+document.getElementById('btnSave').onclick = () => saveMap();
+
+document.getElementById('btnLoad').onclick = () => {
+  document.getElementById('fileInput').click();
+};
+
+document.getElementById('helpToggle').onclick = () => {
+  helpVisible = !helpVisible;
+  document.getElementById('helpPanel').classList.toggle('hidden', !helpVisible);
+  document.getElementById('helpToggle').style.display = helpVisible ? 'none' : 'flex';
+};
+
+/* ==============================================
+   SAVE / LOAD
+   ============================================== */
+function saveMap() {
+  const data = JSON.stringify({ version: 1, nextId, nodes }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mindmap-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Mind map saved');
+}
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.nodes || !Array.isArray(data.nodes)) throw new Error('Invalid format');
+      nodes = data.nodes;
+      nextId = data.nextId || (Math.max(...nodes.map(n=>n.id), 0) + 1);
+      // Ensure all nodes have collapsed field
+      for (const n of nodes) { if (n.collapsed == null) n.collapsed = false; }
+      selectedId = null; hoveredId = null; mode = 'select';
+      fitView();
+      toast('Mind map loaded — ' + nodes.length + ' nodes');
+    } catch(err) {
+      toast('Error loading file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = ''; // Reset so same file can be loaded again
+});
+
+/* ==============================================
+   INITIALIZATION
+   ============================================== */
+// Create the initial root node at the center of the world
+addNode('Central Concept', 0, 0, null);
+selectedId = 1;
+
+// Hide help toggle initially since panel is visible
+document.getElementById('helpToggle').style.display = 'none';
+
+syncUI();
+render();
+
+// Slight delay then fit view to ensure canvas is ready
+requestAnimationFrame(() => { syncUI(); render(); });
+</script>
+</body>
+</html>
