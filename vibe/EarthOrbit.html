@@ -19,7 +19,7 @@ canvas{display:block;position:absolute;top:0;left:0}
 .accent{color:var(--accent)!important}
 
 /* Top Bar */
-#topBar{top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:10px 20px;white-space:nowrap}
+#topBar{top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:10px 20px;white-space:nowrap;z-index:20}
 .time-val{font-size:20px;font-weight:700;color:#fff;min-width:180px;text-align:center}
 .controls-row{display:flex;align-items:center;gap:8px}
 .ctrl-btn{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--fg);border-radius:6px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .15s}
@@ -47,7 +47,7 @@ canvas{display:block;position:absolute;top:0;left:0}
 #instructions kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-family:inherit;font-size:10px;color:var(--fg)}
 
 /* Gravity Graph */
-#gravityGraph{position:absolute;bottom:10px;left:240px;width:260px;height:130px;background:var(--card);border:1px solid var(--border);border-radius:10px;backdrop-filter:blur(14px);z-index:10;padding:10px 14px 8px 8px}
+#gravityGraph{position:absolute;bottom:10px;left:10px;width:260px;height:130px;background:var(--card);border:1px solid var(--border);border-radius:10px;backdrop-filter:blur(14px);z-index:10;padding:10px 14px 8px 8px}
 #gravityGraph h3{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin-bottom:4px}
 #gravityCanvas{width:100%;height:calc(100% - 18px);display:block}
 
@@ -70,12 +70,11 @@ canvas{display:block;position:absolute;top:0;left:0}
   #topBar{flex-direction:column;gap:8px;padding:8px 16px;width:calc(100% - 20px)}
   .time-val{font-size:16px;min-width:auto;width:100%;padding:4px 0}
   .ctrl-btn{width:38px;height:38px;font-size:16px}
-  #infoPanel{width:auto;max-width:180px;padding:8px 12px;font-size:11px}
-  #infoPanel .label-row{padding:2px 0}
-  #legendPanel{display:none}
-  #presetsPanel{display:none}
-  #instructions{display:none}
-  #gravityGraph{display:none}
+  #infoPanel{display:none!important} /* Completely hidden on mobile */
+  #legendPanel{display:none!important}
+  #presetsPanel{display:none!important}
+  #instructions{display:none!important}
+  #gravityGraph{display:none!important}
   .mobile-fab{display:flex}
 }
 
@@ -437,14 +436,22 @@ function drawScaleBar() {
   const niceSteps = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000];
   let bestStep = niceSteps[0];
   for (const s of niceSteps) { if (s <= targetM * 1.2) bestStep = s; }
-  const barPx = bestStep * ppm, x0 = W - 30 - barPx, y0 = H - 50;
   
-  ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(x0 - 4, y0 - 20, barPx + 8, 34);
+  const barPx = bestStep * ppm;
+  // Center the scale bar at the bottom
+  const x0 = W/2 - barPx/2;
+  const y0 = H - 40;
+  
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  // Add padding around the scale bar for visibility
+  ctx.fillRect(x0 - 8, y0 - 22, barPx + 16, 36);
+
   ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + barPx, y0); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(x0, y0-5); ctx.lineTo(x0, y0+5); ctx.moveTo(x0+barPx, y0-5); ctx.lineTo(x0+barPx, y0+5); ctx.stroke();
-  ctx.font = '500 11px "Space Grotesk"'; ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
+  ctx.beginPath(); ctx.moveTo(x0, y0-6); ctx.lineTo(x0, y0+6); ctx.moveTo(x0+barPx, y0-6); ctx.lineTo(x0+barPx, y0+6); ctx.stroke();
+  
+  ctx.font = '500 12px "Space Grotesk"'; ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
   let label = bestStep >= 1e6 ? (bestStep/1e6).toFixed(0) + ' Mm' : (bestStep >= 1000 ? (bestStep/1000).toFixed(0) + ' km' : bestStep + ' m');
-  ctx.fillText(label, x0 + barPx/2, y0 - 8);
+  ctx.fillText(label, x0 + barPx/2, y0 - 10);
 }
 
 // ===========================
@@ -490,7 +497,10 @@ function formatDist(m) { const a=Math.abs(m); return a>=1e6?(m/1e6).toFixed(2)+'
 
 function updateUI() {
   document.getElementById('timeDisplay').textContent = formatTime(simTime);
-  if (!asteroid.active) return;
+  // Only update info panel values if the panel is visible (desktop)
+  const infoPanel = document.getElementById('infoPanel');
+  if (window.getComputedStyle(infoPanel).display === 'none' || !asteroid.active) return;
+  
   const r = Math.sqrt(asteroid.x*asteroid.x + asteroid.y*asteroid.y);
   const speed = Math.sqrt(asteroid.vx*asteroid.vx + asteroid.vy*asteroid.vy);
   const gMag = r > 50 ? G_CONST * enclosedMass(r) / (r*r) : 0;
@@ -537,7 +547,7 @@ function handlePlaceEnd() {
   const worldPos = screenToWorld(placeStart.x, placeStart.y);
   asteroid.x = worldPos.x; asteroid.y = worldPos.y;
   const velScale = 80;
-  if (len > 10) { // Slightly larger dead zone for fat fingers
+  if (len > 10) {
     const ppm = basePPM * zoom, worldDx = dx / ppm, worldDy = -dy / ppm;
     const worldLen = Math.sqrt(worldDx*worldDx + worldDy*worldDy), speed = len * velScale;
     asteroid.vx = (worldDx / worldLen) * speed; asteroid.vy = (worldDy / worldLen) * speed;
@@ -550,9 +560,7 @@ canvas.addEventListener('mousemove', e => handlePlaceMove(e.clientX, e.clientY))
 canvas.addEventListener('mouseup', e => handlePlaceEnd());
 
 canvas.addEventListener('touchstart', e => {
-  e.preventDefault(); const t = e.touches[0];
-  // Don't place if they hit a UI element (though canvas is underneath)
-  handlePlaceStart(t.clientX, t.clientY);
+  e.preventDefault(); const t = e.touches[0]; handlePlaceStart(t.clientX, t.clientY);
 }, { passive: false });
 canvas.addEventListener('touchmove', e => {
   e.preventDefault(); if (isPlacing) { const t = e.touches[0]; handlePlaceMove(t.clientX, t.clientY); }
